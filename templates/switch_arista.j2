@@ -47,7 +47,7 @@ ip access-list FILTER_DHCP_SERVER
 {# ----- #}
 {# VLANs #}
 {# ----- #}
-{% for vlan in vlans %}
+{% for vlan in vlan_list %}
 vlan {{ vlan['vid'] }}
    name {{ vlan['name'] }}
 !
