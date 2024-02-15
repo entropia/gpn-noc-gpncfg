@@ -45,7 +45,9 @@ def assemble():
     )
 
     parser.add_argument(
-        "--cache-dir", default=get_cache_path(), help="where to store cached data"
+        "--cache-file",
+        default=os.path.join(get_cache_path(), "netbox.json"),
+        help="where to store cached data",
     )
     parser.add_argument(
         "--autoupdate-interval",
@@ -117,7 +119,7 @@ def assemble():
     refuse_secret_on_cli(args, "--netbox-token")
     refuse_secret_on_cli(args, "--snmp-community")
 
-    options.cache_dir = os.path.expanduser(options.cache_dir)
+    options.cache_file = os.path.expanduser(options.cache_file)
     options.log_level = options.log_level.upper()
     try:
         options.log_level = getattr(logging, options.log_level)
