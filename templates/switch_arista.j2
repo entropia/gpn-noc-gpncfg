@@ -6,7 +6,7 @@ hostname {{ extra["hostname"] }}
 environment fan-speed override {{ config["override_fan_speed"] }}
 !
 banner motd
-{{ config["motd"] }}
+{{ extra["motd"] }}
 EOF
 !
 snmp-server contact "{{ config["snmp_contact"] }}"
