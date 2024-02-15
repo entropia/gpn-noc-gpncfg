@@ -13,6 +13,7 @@ configargparse = "^1.7"
 [tool.poetry.group.dev.dependencies]
 build = "^1.1.1"
 poetry = "^1.8.2"
+pre-commit = "^3.6.2"
 
 [build-system]
 requires = ["poetry-core"]
