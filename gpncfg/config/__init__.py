@@ -21,7 +21,7 @@ def get_config_path():
         config_home = os.environ["XDG_CONFIG_HOME"]
     else:
         config_home = os.path.join(os.environ["HOME"], ".config")
-    config_path = os.path.join(config_home, "gpncfg.cfg")
+    config_path = os.path.join(config_home, "gpncfg.toml")
 
     return config_path
 
