@@ -36,17 +36,27 @@ class DataProvider:
                     tenant:"garry-gulaschtopf"
                 ) {
                     name,
+                    id,
                     serial,
                     location{name},
                     site{name},
                     interfaces {
                         name,
+                        enabled,
+                        description,
+                        id,
                         type,
                         mode,
                         tagged_vlans{name,vid},
                         untagged_vlan{name,vid},
                         poe_mode
                     }
+                },
+                vlan_list(
+                    tenant:"garry-gulaschtopf"
+                ) {
+                    name,
+                    vid
                 }
             }
             """
