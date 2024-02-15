@@ -30,24 +30,26 @@ class DataProvider:
         # Provide a GraphQL query
         query = gql.gql(
             """
-            query { device_list(
-                status:"active"
-                tenant:"garry-gulaschtopf"
-            ) {
-                name,
-                serial,
-                location{name},
-                site{name},
-                interfaces {
+            query {
+                device_list(
+                    status:"active"
+                    tenant:"garry-gulaschtopf"
+                ) {
                     name,
-                    type,
-                    mode,
-                    tagged_vlans{name,vid},
-                    untagged_vlan{name,vid},
-                    poe_mode
+                    serial,
+                    location{name},
+                    site{name},
+                    interfaces {
+                        name,
+                        type,
+                        mode,
+                        tagged_vlans{name,vid},
+                        untagged_vlan{name,vid},
+                        poe_mode
+                    }
                 }
-            }}
-        """
+            }
+            """
         )
 
         # Execute the query on the transport
