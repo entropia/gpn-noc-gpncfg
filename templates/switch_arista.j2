@@ -1,7 +1,7 @@
 {# ------------------- #}
 {# GENERIC SYSTEM-SHIT #}
 {# ------------------- #}
-hostname {{ hostname }}
+hostname {{ extra["hostname"] }}
 !
 environment fan-speed override {{ event["override_fan_speed"] }}
 !
@@ -28,7 +28,7 @@ username admin role network-admin secret sha512 redacted
 !
 event-handler autoreload
    trigger on-boot
-   action bash /mnt/flash/autoreload.sh {{ event["autoupdate_interval"] }} {{ serial }} {{ event["gateway"] }}
+   action bash /mnt/flash/autoreload.sh {{ event["autoupdate_interval"] }} {{ extra["serial"] }} {{ event["gateway"] }}
    delay 60
    asynchronous
 exit
@@ -56,7 +56,7 @@ vlan {{ vlan['vlan_id'] }}
 {# -------------------------- #}
 {# Ports / Network-Interfaces #}
 {# -------------------------- #}
-{% for interface in interfaces %}
+{% for interface in netbox['interfaces'] %}
 interface {{ interface['name'] }}
     description {{ interface['description'] }}
     {% if interface['address'] is not none %}
