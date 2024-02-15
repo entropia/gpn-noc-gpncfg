@@ -60,7 +60,9 @@ vlan {{ vlan['vid'] }}
 interface {{ interface['name'] }}
     description {{ interface['description'] }}
     {% if interface['address'] is not none %}
-    ip address {{ interface['address'] }}
+        {% for address in interface['ip_addresses'] %}
+    ip address {{ address.address }}
+        {% endfor %}
     {% endif %}
     {% if not interface['enabled'] %}
     shutdown
