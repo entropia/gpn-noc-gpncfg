@@ -53,7 +53,12 @@ def assemble():
         "--netbox-token", required=True, help="authorization token for the netbox apis"
     )
     parser.add_argument("--offline", help="run in offline mode", action="store_true")
-    parser.add_argument("-o", "--output-dir", help="where to output the configs")
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        default="./generated-configs",
+        help="where to output the configs",
+    )
     parser.add_argument(
         "--snmp-community",
         default="bogus-snmp-config",
