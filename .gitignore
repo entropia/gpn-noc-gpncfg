@@ -11,3 +11,4 @@ parser.out
 .idea
 cache/
 configs/
+generated-configs/
