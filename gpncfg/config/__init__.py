@@ -26,6 +26,15 @@ def get_config_path():
     return config_path
 
 
+def refuse_secret_on_cli(args, name):
+    if name in args:
+        print(
+            f"error: secret found in cli args, refusing to cooperate: '{name}'. do not provide secrets via the command line. instead use the config file to specify secrets.",
+            file=sys.stderr,
+        )
+        exit(1)
+
+
 def assemble():
     config_path = get_config_path()
 
@@ -48,17 +57,11 @@ def assemble():
 
     options = parser.parse_args()
 
-    if (
-        "--netbox-token"
-        in parser.get_source_to_settings_dict().get("command_line", {"": [[], []]})[""][
-            1
-        ]
-    ):
-        print(
-            "error: netbox-token found in cli args, refusing to cooperate. do not provide secrets via the command line. instead use the config file to specify secrets.",
-            file=sys.stderr,
-        )
-        exit(1)
+    args = parser.get_source_to_settings_dict().get("command_line", {"": [[], []]})[""][
+        1
+    ]
+
+    refuse_secret_on_cli(args, "--netbox-token")
 
     options.cache_dir = os.path.expanduser(options.cache_dir)
     options.log_level = options.log_level.upper()
