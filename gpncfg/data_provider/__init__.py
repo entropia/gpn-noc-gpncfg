@@ -89,9 +89,7 @@ class DataProvider:
             self.data = json.load(file)
 
     def assert_cache_readable(self):
-        dirname = os.path.dirname(self.location)
-
-        log.debug(f"making sure cache directory at '{dirname}' is readable")
+        log.debug(f"making sure cache directory at '{self.location}' is readable")
 
         assert os.access(
             self.location, os.R_OK
