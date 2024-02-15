@@ -11,6 +11,7 @@ class MainAction:
     def __init__(self):
         self.cfg = config.assemble()
 
-        logging.basicConfig(level=self.cfg.log_level)
+        logging.basicConfig()
+        logging.getLogger("gpncfg").setLevel(self.cfg.log_level)
 
         log.info("gpncfg greets garry gulaschtopf")
