@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import logging
+import os
 from pprint import pprint as pp
 
 from .. import config
 from ..data_provider import DataProvider
+from ..generator import Generator
 
 log = logging.getLogger(__name__)
 
@@ -18,16 +20,27 @@ class MainAction:
 
         log.info("gpncfg greets garry gulaschtopf")
 
+        os.makedirs(self.cfg.output_dir, exist_ok=True)
+        assert os.access(
+            self.cfg.output_dir, os.W_OK
+        ), f"output directory at '{self.cfg.output_dir}' is not writeable"
+
         dp = DataProvider(
             self.cfg.netbox_url + "/graphql/",
             self.cfg.netbox_token,
             self.cfg.cache_dir + "/devicelist.json",
         )
 
-        dp.fetch_netbox()
-        pp(dp.data)
+        if self.cfg.offline:
+            dp.fetch_cache()
+        else:
+            dp.fetch_netbox()
 
-        dp.data = None
+        gen = Generator(self.cfg, dp.data)
+        gen.generate()
 
-        dp.fetch_cache()
-        pp(dp.data)
+        log.info("writing configs")
+        for key in gen.configs:
+            with open(os.path.join(self.cfg.output_dir, "config-" + key), "w+") as file:
+                log.debug("writing config for serial " + key)
+                print(gen.configs[key], file=file)
