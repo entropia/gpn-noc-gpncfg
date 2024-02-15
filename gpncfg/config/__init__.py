@@ -45,7 +45,32 @@ def assemble():
     parser.add_argument(
         "--cache-dir", default=get_cache_path(), help="where to store cached data"
     )
+    parser.add_argument(
+        "--autoupdate-interval",
+        help="how frequently the devices try to update their configuration",
+        required=True,
+    )
+    parser.add_argument(
+        "--default-hostname-prefix",
+        help="use this prefix to generate device hostanmes if there is none configured in the netbox",
+        required=True,
+    )
+    parser.add_argument(
+        "--gateway",
+        help="the default gateway for all devices",
+        required=True,
+    )
     parser.add_argument("--log-level", default="INFO", help="verbosity of the logger")
+    parser.add_argument(
+        "--motd",
+        help="message of the day to be displayed on switch login",
+        required=True,
+    )
+    parser.add_argument(
+        "--netbox-tenant",
+        help="only generate configs for devices assigned to this tenant. uses the netbox slug, not the id",
+        required=True,
+    )
     parser.add_argument(
         "--netbox-url", required=True, help="url to the netbox instance"
     )
@@ -56,13 +81,29 @@ def assemble():
     parser.add_argument(
         "-o",
         "--output-dir",
-        default="./generated-configs",
+        # default="./generated-configs",
         help="where to output the configs",
+        required=True,
+    )
+    parser.add_argument(
+        "--override-fan-speed",
+        help="the default fan speed of all the devices",
+        required=True,
     )
     parser.add_argument(
         "--snmp-community",
-        default="bogus-snmp-config",
-        help="what snmp community to put the devices in",
+        help="what snmp community the devices shall join",
+        required=True,
+    )
+    parser.add_argument(
+        "--snmp-contact",
+        help="the snmp contact address of the devices",
+        required=True,
+    )
+    parser.add_argument(
+        "--snmp-location",
+        help="the snmp location of the devices",
+        required=True,
     )
 
     options = parser.parse_args()
