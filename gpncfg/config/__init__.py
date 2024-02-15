@@ -38,10 +38,10 @@ def assemble():
     )
     parser.add_argument("--log-level", default="INFO", help="verbosity of the logger")
     parser.add_argument(
-        "--netbox-api", required=True, help="url to the netbox api endpoint"
+        "--netbox-url", required=True, help="url to the netbox instance"
     )
     parser.add_argument(
-        "--netbox-token", required=True, help="url to the netbox api endpoint"
+        "--netbox-token", required=True, help="authorization token for the netbox apis"
     )
     parser.add_argument("--offline", help="run in offline mode", action="store_true")
     parser.add_argument("-o", "--output-dir", help="where to output the configs")
