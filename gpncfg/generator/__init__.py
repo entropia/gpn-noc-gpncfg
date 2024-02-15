@@ -51,7 +51,7 @@ class Generator:
                 extra["serial"] = netbox["serial"]
 
             if netbox["location"] == None:
-                extra["snmp_location"] = self.context["event"]["snmp_location"]
+                extra["snmp_location"] = self.cfg.snmp_location
             else:
                 extra["snmp_location"] = netbox["location"]["name"]
 
