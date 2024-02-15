@@ -54,6 +54,11 @@ def assemble():
     )
     parser.add_argument("--offline", help="run in offline mode", action="store_true")
     parser.add_argument("-o", "--output-dir", help="where to output the configs")
+    parser.add_argument(
+        "--snmp-community",
+        default="bogus-snmp-config",
+        help="what snmp community to put the devices in",
+    )
 
     options = parser.parse_args()
 
@@ -62,6 +67,7 @@ def assemble():
     ]
 
     refuse_secret_on_cli(args, "--netbox-token")
+    refuse_secret_on_cli(args, "--snmp-community")
 
     options.cache_dir = os.path.expanduser(options.cache_dir)
     options.log_level = options.log_level.upper()
