@@ -10,7 +10,7 @@ banner motd
 EOF
 !
 snmp-server contact "{{ event["snmp_contact"] }}"
-snmp-server location "{{ snmp_location }}"
+snmp-server location "{{ extra["snmp_location"] }}"
 snmp-server community {{ config["snmp_community"] }} ro
 !
 spanning-tree mode mstp
