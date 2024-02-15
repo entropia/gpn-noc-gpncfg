@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import copy
+import datetime
 import json
 import logging
 import os
@@ -37,6 +38,12 @@ class Generator:
         log.info("generating configs")
         template = self.j2.get_template("switch_arista.j2")
 
+        ts = (
+            datetime.datetime.utcnow()
+            .replace(microsecond=0, tzinfo=datetime.timezone.utc)
+            .isoformat()
+        )
+
         for netbox in self.data["device_list"]:
             extra = dict()
 
@@ -54,6 +61,8 @@ class Generator:
                 extra["snmp_location"] = self.cfg.snmp_location
             else:
                 extra["snmp_location"] = netbox["location"]["name"]
+
+            extra["motd"] = self.cfg.motd.format(timestamp=ts)
 
             ctx = copy.deepcopy(self.context)
             ctx["netbox"] = netbox
