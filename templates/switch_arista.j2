@@ -3,13 +3,13 @@
 {# ------------------- #}
 hostname {{ hostname }}
 !
-environment fan-speed override {{ event_config["override_fan_speed"] }}
+environment fan-speed override {{ event["override_fan_speed"] }}
 !
 banner motd
-{{ event_config['motd'] }}
+{{ event["motd"] }}
 EOF
 !
-snmp-server contact "{{ event_config["snmp_contact"] }}"
+snmp-server contact "{{ event["snmp_contact"] }}"
 snmp-server location "{{ snmp_location }}"
 snmp-server community {{ event_config["snmp_community"] }} ro
 !
@@ -28,7 +28,7 @@ username admin role network-admin secret sha512 redacted
 !
 event-handler autoreload
    trigger on-boot
-   action bash /mnt/flash/autoreload.sh {{ event_config["autoupdate_interval"] }} {{ serial }} {{ event_config['gateway'] }}
+   action bash /mnt/flash/autoreload.sh {{ event["autoupdate_interval"] }} {{ serial }} {{ event["gateway"] }}
    delay 60
    asynchronous
 exit
@@ -112,7 +112,7 @@ interface {{ interface['name'] }}
 {# ------- #}
 {# Routing #}
 {# ------- #}
-ip route 0.0.0.0/0 {{ event_config['gateway'] }}
+ip route 0.0.0.0/0 {{ event["gateway"] }}
 !
 ip routing
 !
