@@ -39,7 +39,9 @@ def assemble():
     config_path = get_config_path()
 
     parser = configargparse.ArgumentParser(
-        default_config_files=[config_path],
+        # personal config file overrides event config
+        default_config_files=["./data/event.toml", config_path],
+        config_file_parser_class=configargparse.TomlConfigParser(["gpncfg"]),
     )
 
     parser.add_argument(
