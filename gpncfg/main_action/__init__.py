@@ -25,11 +25,7 @@ class MainAction:
             self.cfg.output_dir, os.W_OK
         ), f"output directory at '{self.cfg.output_dir}' is not writeable"
 
-        dp = DataProvider(
-            self.cfg.netbox_url + "/graphql/",
-            self.cfg.netbox_token,
-            self.cfg.cache_dir + "/devicelist.json",
-        )
+        dp = DataProvider(self.cfg)
 
         if self.cfg.offline:
             dp.fetch_cache()
