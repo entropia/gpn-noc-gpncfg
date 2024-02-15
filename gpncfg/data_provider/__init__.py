@@ -30,7 +30,7 @@ class DataProvider:
             query {
                 device_list(
                     status:"active"
-                    tenant:"garry-gulaschtopf"
+                    tenant:"%(tenant)s"
                 ) {
                     name,
                     id,
@@ -51,13 +51,16 @@ class DataProvider:
                     }
                 },
                 vlan_list(
-                    tenant:"garry-gulaschtopf"
+                    tenant:"%(tenant)s"
                 ) {
                     name,
                     vid
                 }
             }
             """
+            % {
+                "tenant": self.cfg.netbox_tenant,
+            }
         )
 
         # Execute the query on the transport
