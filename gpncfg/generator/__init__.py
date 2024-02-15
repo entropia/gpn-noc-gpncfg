@@ -27,11 +27,6 @@ class Generator:
                 "name"
             ].translate(trans)
 
-        # TODO is this really how we want to do things? maybe load them via
-        # configargparse, maybe load them somewhere else?
-        with open("./db/event-config.json", "rb") as file:
-            self.context["event"] = json.load(file)
-
         self.j2 = jinja2.Environment(
             loader=jinja2.FileSystemLoader(searchpath=["./templates/"]),
             trim_blocks=True,
