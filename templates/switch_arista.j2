@@ -11,7 +11,7 @@ EOF
 !
 snmp-server contact "{{ event["snmp_contact"] }}"
 snmp-server location "{{ snmp_location }}"
-snmp-server community {{ event_config["snmp_community"] }} ro
+snmp-server community {{ config["snmp_community"] }} ro
 !
 spanning-tree mode mstp
 !
@@ -48,8 +48,8 @@ ip access-list FILTER_DHCP_SERVER
 {# VLANs #}
 {# ----- #}
 {% for vlan in vlans %}
-vlan {{ vlan['vlan_id'] }}
-   name {{ vlan['name']| replace(' ', '-')| replace('(', '')| replace(')', '')| replace('&-', '') }}
+vlan {{ vlan['vid'] }}
+   name {{ vlan['name'] }}
 !
 {% endfor %}
 !
@@ -67,9 +67,9 @@ interface {{ interface['name'] }}
     {% endif %}
     {% if "vlan" not in interface['name']|lower %}
         {% if interface['mode'] is none %}
-        {% elif interface['mode'] == 'access' %}
+        {% elif interface['mode'] == 'ACCESS' %}
             {%  if interface['untagged_vlan'] is not none %}
-    switchport access vlan {{ interface['untagged_vlan'] }}
+    switchport access vlan {{ interface['untagged_vlan']['vid'] }}
             {% endif %}
     {# dhcp-guard only on client-vlan #}
     {# TODO get access-vlan from configuration #}
@@ -84,22 +84,22 @@ interface {{ interface['name'] }}
     {# switchport port-security #}
     {# no the same command on all version of arista #}
     {# switchport port-security maximum 64 #}
-        {% elif interface['mode'] == 'tagged' %}
+        {% elif interface['mode'] == 'TAGGED' %}
     switchport mode trunk
             {% if interface['tagged_vlans']|length == 0 %}
     switchport trunk allowed vlan none
             {% else %}
-    switchport trunk allowed vlan {{ interface['tagged_vlans']|join(',') }}
+    switchport trunk allowed vlan {{ interface['tagged_vlans']|map(attribute='vid')|join(',') }}
             {% endif %}
             {% if interface['untagged_vlan'] is not none %}
-    switchport trunk native vlan {{ interface['untagged_vlan'] }}
+    switchport trunk native vlan {{ interface['untagged_vlan']['vid'] }}
             {% endif %}
-        {% elif interface['mode'] == 'tagged-all' %}
+        {% elif interface['mode'] == 'TAGGED_ALL' %}
     switchport mode trunk
     spanning-tree bpdufilter enable
     spanning-tree bpduguard disable
             {% if interface['untagged_vlan'] is not none %}
-    switchport trunk native vlan {{ interface['untagged_vlan'] }}
+    switchport trunk native vlan {{ interface['untagged_vlan']['vid'] }}
             {% endif %}
         {% endif %}
     {% endif %}
