@@ -42,6 +42,7 @@ class DataProvider:
                     site{name},
                     interfaces {
                         name,
+                        ip_addresses { address },
                         enabled,
                         description,
                         id,
