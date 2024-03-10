@@ -11,6 +11,12 @@ import jinja2
 log = logging.getLogger(__name__)
 
 
+def get_template_path():
+    cur_dir = os.path.dirname(__file__)
+    epath = os.path.join(cur_dir, "templates")
+    return epath
+
+
 class Generator:
     def __init__(self, cfg, data):
         self.configs = {}
@@ -29,7 +35,7 @@ class Generator:
             ].translate(trans)
 
         self.j2 = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(searchpath=["./templates/"]),
+            loader=jinja2.FileSystemLoader(searchpath=[get_template_path()]),
             trim_blocks=True,
             lstrip_blocks=True,
         )
