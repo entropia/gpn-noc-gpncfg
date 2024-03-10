@@ -21,6 +21,10 @@ poetry = "^1.8.2"
 pre-commit = "^3.6.2"
 
 
+[[tool.poetry.include]]
+path = "data"
+
+
 [tool.poetry.scripts]
 gpncfg = "gpncfg:run"
 
