@@ -26,6 +26,12 @@ def get_config_path():
     return config_path
 
 
+def get_eventtoml_path():
+    cur_dir = os.path.dirname(__file__)
+    epath = os.path.join(cur_dir, "event.toml")
+    return epath
+
+
 def refuse_secret_on_cli(args, name):
     if name in args:
         print(
@@ -38,9 +44,10 @@ def refuse_secret_on_cli(args, name):
 def assemble():
     config_path = get_config_path()
 
+    print(get_eventtoml_path())
     parser = configargparse.ArgumentParser(
         # personal config file overrides event config
-        default_config_files=["./data/event.toml", config_path],
+        default_config_files=[get_eventtoml_path(), config_path],
         config_file_parser_class=configargparse.TomlConfigParser(["gpncfg"]),
     )
 
