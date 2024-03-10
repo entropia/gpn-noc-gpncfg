@@ -69,11 +69,6 @@ def assemble():
         required=True,
     )
     parser.add_argument(
-        "--default-hostname-prefix",
-        help="use this prefix to generate device hostanmes if there is none configured in the netbox",
-        required=True,
-    )
-    parser.add_argument(
         "--gateway",
         help="the default gateway for all devices",
         required=True,

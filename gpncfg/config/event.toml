@@ -1,6 +1,5 @@
 [gpncfg]
 autoupdate-interval = 30
-default-hostname-prefix = "gpn-device"
 gateway = "94.45.227.1"
 motd = '''
  ^ ^   hooot hoooot
