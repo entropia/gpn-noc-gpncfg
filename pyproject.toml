@@ -18,6 +18,9 @@ build = "^1.1.1"
 poetry = "^1.8.2"
 pre-commit = "^3.6.2"
 
+[tool.poetry.scripts]
+gpncfg = "gpncfg:run"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

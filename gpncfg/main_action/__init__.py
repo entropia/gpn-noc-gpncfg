@@ -11,6 +11,10 @@ from ..generator import Generator
 log = logging.getLogger(__name__)
 
 
+def run():
+    MainAction()
+
+
 class MainAction:
     def __init__(self):
         self.cfg = config.assemble()
