@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+from pprint import pprint
 
 import jinja2
 
@@ -67,6 +68,13 @@ class Generator:
                 extra["snmp_location"] = self.cfg.snmp_location
             else:
                 extra["snmp_location"] = netbox["location"]["name"]
+
+            for iface in netbox["interfaces"]:
+                tagged = [str(vlan["vid"]) for vlan in iface["tagged_vlans"]]
+                if len(tagged) != 0:
+                    iface["tagged_vlans"] = ",".join(tagged)
+                else:
+                    iface["tagged_vlans"] = "none"
 
             extra["motd"] = self.cfg.motd.format(timestamp=ts)
 

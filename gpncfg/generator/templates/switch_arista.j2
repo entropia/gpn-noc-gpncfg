@@ -88,11 +88,7 @@ interface {{ interface['name'] }}
     {# switchport port-security maximum 64 #}
         {% elif interface['mode'] == 'TAGGED' %}
     switchport mode trunk
-            {% if interface['tagged_vlans']|length == 0 %}
-    switchport trunk allowed vlan none
-            {% else %}
-    switchport trunk allowed vlan {{ interface['tagged_vlans']|map(attribute='vid')|join(',') }}
-            {% endif %}
+    switchport trunk allowed vlan {{ interface['tagged_vlans'] }}
             {% if interface['untagged_vlan'] is not none %}
     switchport trunk native vlan {{ interface['untagged_vlan']['vid'] }}
             {% endif %}
