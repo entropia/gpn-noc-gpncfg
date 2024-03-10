@@ -57,6 +57,13 @@ def assemble():
         help="where to store cached data",
     )
     parser.add_argument(
+        "-c",
+        "--config",
+        help="path to the config file",
+        is_config_file=True,
+        # required=True,
+    )
+    parser.add_argument(
         "--autoupdate-interval",
         help="how frequently the devices try to update their configuration",
         required=True,
