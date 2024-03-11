@@ -48,34 +48,34 @@ ip access-list FILTER_DHCP_SERVER
 {# VLANs #}
 {# ----- #}
 {% for vlan in vlan_list %}
-vlan {{ vlan['vid'] }}
-   name {{ vlan['name'] }}
+vlan {{ vlan["vid"] }}
+   name {{ vlan["name"] }}
 !
 {% endfor %}
 !
 {# -------------------------- #}
 {# Ports / Network-Interfaces #}
 {# -------------------------- #}
-{% for interface in netbox['interfaces'] %}
-interface {{ interface['name'] }}
-    description {{ interface['description'] }}
-    {% if interface['address'] is not none %}
-        {% for address in interface['ip_addresses'] %}
+{% for interface in netbox["interfaces"] %}
+interface {{ interface["name"] }}
+    description {{ interface["description"] }}
+    {% if interface["address"] is not none %}
+        {% for address in interface["ip_addresses"] %}
     ip address {{ address.address }}
         {% endfor %}
     {% endif %}
-    {% if not interface['enabled'] %}
+    {% if not interface["enabled"] %}
     shutdown
     {% endif %}
-    {% if "vlan" not in interface['name']|lower %}
-        {% if interface['mode'] is none %}
-        {% elif interface['mode'] == 'ACCESS' %}
-            {%  if interface['untagged_vlan'] is not none %}
-    switchport access vlan {{ interface['untagged_vlan']['vid'] }}
+    {% if "vlan" not in interface["name"]|lower %}
+        {% if interface["mode"] is none %}
+        {% elif interface["mode"] == "ACCESS" %}
+            {%  if interface["untagged_vlan"] is not none %}
+    switchport access vlan {{ interface["untagged_vlan"]["vid"] }}
             {% endif %}
     {# dhcp-guard only on client-vlan #}
     {# TODO get access-vlan from configuration #}
-    {% if interface['untagged_vlan'] == 103 %}
+    {% if interface["untagged_vlan"] == 103 %}
     ip access-group FILTER_DHCP_SERVER in
     {% endif %}
     spanning-tree portfast edge
@@ -86,22 +86,22 @@ interface {{ interface['name'] }}
     {# switchport port-security #}
     {# no the same command on all version of arista #}
     {# switchport port-security maximum 64 #}
-        {% elif interface['mode'] == 'TAGGED' %}
+        {% elif interface["mode"] == "TAGGED" %}
     switchport mode trunk
-    switchport trunk allowed vlan {{ interface['tagged_vlans'] }}
-            {% if interface['untagged_vlan'] is not none %}
-    switchport trunk native vlan {{ interface['untagged_vlan']['vid'] }}
+    switchport trunk allowed vlan {{ interface["tagged_vlans"] }}
+            {% if interface["untagged_vlan"] is not none %}
+    switchport trunk native vlan {{ interface["untagged_vlan"]["vid"] }}
             {% endif %}
-        {% elif interface['mode'] == 'TAGGED_ALL' %}
+        {% elif interface["mode"] == "TAGGED_ALL" %}
     switchport mode trunk
     spanning-tree bpdufilter enable
     spanning-tree bpduguard disable
-            {% if interface['untagged_vlan'] is not none %}
-    switchport trunk native vlan {{ interface['untagged_vlan']['vid'] }}
+            {% if interface["untagged_vlan"] is not none %}
+    switchport trunk native vlan {{ interface["untagged_vlan"]["vid"] }}
             {% endif %}
         {% endif %}
     {% endif %}
-    {% if interface['type'] == '40gbase-x-qsfpp' %}
+    {% if interface["type"] == "40gbase-x-qsfpp" %}
     speed forced 40gfull
     {% endif %}
 !
