@@ -19,6 +19,9 @@ if ! command -v python3 > /dev/null; then
 	fatal "python3 not found. please install python3 using your preferred package manager"
 fi
 
+say "cleaning up old venv"
+rm -r venv
+
 say "creating the venv"
 python3 -m venv venv
 # shellcheck disable=SC1091
