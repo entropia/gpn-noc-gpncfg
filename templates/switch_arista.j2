@@ -1,0 +1,118 @@
+{# ------------------- #}
+{# GENERIC SYSTEM-SHIT #}
+{# ------------------- #}
+hostname {{ hostname }}
+!
+environment fan-speed override {{ event_config["override_fan_speed"] }}
+!
+banner motd
+{{ event_config['motd'] }}
+EOF
+!
+snmp-server contact "{{ event_config["snmp_contact"] }}"
+snmp-server location "{{ snmp_location }}"
+snmp-server community {{ event_config["snmp_community"] }} ro
+!
+spanning-tree mode mstp
+!
+aaa authentication login console local
+aaa authorization exec default local
+!
+no aaa root
+!
+service unsupported-transceiver wiprolabs f5047577
+!
+username admin role network-admin secret sha512 redacted
+!
+!
+!
+event-handler autoreload
+   trigger on-boot
+   action bash /mnt/flash/autoreload.sh {{ event_config["autoupdate_interval"] }} {{ serial }} {{ event_config['gateway'] }}
+   delay 60
+   asynchronous
+exit
+!
+!
+errdisable recovery cause bpduguard
+errdisable recovery interval 120
+errdisable recovery cause portsec
+!
+ip access-list FILTER_DHCP_SERVER
+   deny udp any eq bootps any
+   deny udp any any eq bootpc
+   permit ip any any
+!
+!
+{# ----- #}
+{# VLANs #}
+{# ----- #}
+{% for vlan in vlans %}
+vlan {{ vlan['vlan_id'] }}
+   name {{ vlan['name']| replace(' ', '-')| replace('(', '')| replace(')', '')| replace('&-', '') }}
+!
+{% endfor %}
+!
+{# -------------------------- #}
+{# Ports / Network-Interfaces #}
+{# -------------------------- #}
+{% for interface in interfaces %}
+interface {{ interface['name'] }}
+    description {{ interface['description'] }}
+    {% if interface['address'] is not none %}
+    ip address {{ interface['address'] }}
+    {% endif %}
+    {% if not interface['enabled'] %}
+    shutdown
+    {% endif %}
+    {% if "vlan" not in interface['name']|lower %}
+        {% if interface['mode'] is none %}
+        {% elif interface['mode'] == 'access' %}
+            {%  if interface['untagged_vlan'] is not none %}
+    switchport access vlan {{ interface['untagged_vlan'] }}
+            {% endif %}
+    {# dhcp-guard only on client-vlan #}
+    {# TODO get access-vlan from configuration #}
+    {% if interface['untagged_vlan'] == 103 %}
+    ip access-group FILTER_DHCP_SERVER in
+    {% endif %}
+    spanning-tree portfast edge
+    spanning-tree bpdufilter disable
+    spanning-tree bpduguard enable
+    spanning-tree portfast
+    {# removed caused issues - will be fixed today #}
+    {# switchport port-security #}
+    {# no the same command on all version of arista #}
+    {# switchport port-security maximum 64 #}
+        {% elif interface['mode'] == 'tagged' %}
+    switchport mode trunk
+            {% if interface['tagged_vlans']|length == 0 %}
+    switchport trunk allowed vlan none
+            {% else %}
+    switchport trunk allowed vlan {{ interface['tagged_vlans']|join(',') }}
+            {% endif %}
+            {% if interface['untagged_vlan'] is not none %}
+    switchport trunk native vlan {{ interface['untagged_vlan'] }}
+            {% endif %}
+        {% elif interface['mode'] == 'tagged-all' %}
+    switchport mode trunk
+    spanning-tree bpdufilter enable
+    spanning-tree bpduguard disable
+            {% if interface['untagged_vlan'] is not none %}
+    switchport trunk native vlan {{ interface['untagged_vlan'] }}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    {% if interface['type'] == '40gbase-x-qsfpp' %}
+    speed forced 40gfull
+    {% endif %}
+!
+{% endfor %}
+!
+{# ------- #}
+{# Routing #}
+{# ------- #}
+ip route 0.0.0.0/0 {{ event_config['gateway'] }}
+!
+ip routing
+!

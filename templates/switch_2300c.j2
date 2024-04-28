@@ -1,0 +1,191 @@
+groups {
+    Interface_MTU {
+        interfaces <*> {
+            mtu 9192;
+        }
+    }
+}
+
+system {
+    host-name {{ hostname }};
+    time-zone UTC;
+    default-address-selection;
+    root-authentication {
+encrypted-password "redacted"; ## SECRET-DATA
+    }
+    login {
+        message "Welcome to {{ hostname }} at GPN21"
+        class OXIDIZED {
+            permissions [ view view-configuration ];
+        }
+	class junos_exporter {
+            allow-commands "show .*";
+        }
+
+    }
+    services {
+        ssh {
+            root-login allow;
+            protocol-version v2;
+            connection-limit 20;
+            rate-limit 5;
+        }
+        netconf {
+            ssh;
+        }
+    }
+    max-configurations-on-flash 49;
+    {% block system %}{% endblock %}
+}
+
+
+
+chassis {
+    aggregated-devices {
+        ethernet {
+             device-count 32;
+        }
+    }
+    alarm {
+        management-ethernet {
+             link-down ignore;
+        }
+    }
+    lcd-menu {
+        fpc 0 {
+            menu-item {
+                maintenance-menu disable;
+            }
+        }
+        fpc 1 {
+            menu-item {
+                maintenance-menu disable;
+            }
+        }
+        fpc 2 {
+            menu-item {
+                maintenance-menu disable;
+            }
+        }
+        fpc 3 {
+            menu-item {
+                maintenance-menu disable;
+            }
+        }
+    }
+}
+interfaces {
+{% for iface in interfaces %}
+{% if iface.type  != "virtual" and iface["mode"] is not none %}
+
+    {{ iface.name }} {
+        description "{{ iface.description }}";
+        mtu 9192;
+	  unit 0  {
+		family ethernet-switching {
+{%     if iface["mode"] == 'access' %}
+                	interface-mode access;
+                	vlan {
+                	    members {{ "V%s" | format(iface['untagged_vlan'])  }};
+                	}
+{%     elif iface["mode"] == "tagged-all" %}
+                	interface-mode trunk;
+                	vlan {
+                	    members all;
+                	}
+
+{% endif %}
+	 	}
+      	}
+    }
+{% endif %}
+{% endfor %}
+
+
+    irb {
+{% for iface in interfaces %}
+{% if iface.type  == "virtual" %}
+        unit {{ iface.name|replace('vlan.', '')|replace('irb.', '') }} {
+{%     if iface['address'] is not none %}
+            family inet {
+                address {{ iface['address'] }};
+            }
+{%     endif %}
+         }
+
+{% endif %}
+{% endfor %}
+    }
+}
+
+
+switch-options {
+{% for iface in accessifs %}
+{%   if not (iface.is_virtual or iface.tagged|length or iface.vlan_all) %}
+    interface {{ iface.ifname }} {
+        interface-mac-limit {
+            {{ event_config['access_mac_limit'] }};
+            packet-action shutdown;
+        }
+    }
+{%   endif %}
+{% endfor %}
+}
+
+routing-options {
+    rib inet.0 {
+        static {
+            route 0.0.0.0/0 next-hop {{ event_config['gateway'] }};
+        }
+    }
+}
+
+forwarding-options {
+
+    storm-control-profiles limit_all_15kbps {
+        all {
+            bandwidth-level 15000;
+        }
+    }
+
+}
+
+protocols {
+    igmp-snooping {
+        vlan all;
+    }
+    inactive: rstp {
+        bpdu-block-on-edge;
+{% for iface in accessifs %}
+{%   if not iface.is_virtual and not iface.tagged and not 'uplink' in iface.tags %}
+        interface {{ iface.ifname }} {
+            edge;
+        }
+{%   endif %}
+{% endfor %}
+    }
+    lldp {
+        port-id-subtype interface-name;
+        interface all;
+    }
+    lldp-med {
+        interface all;
+    }
+}
+vlans {
+
+
+    V102 {
+        vlan-id 102;
+	l3-interface irb.102;
+     }
+    {% for vlan in vlans %}
+    V{{ vlan["vlan_id"] }} {
+        vlan-id {{ vlan["vlan_id"] }};
+    }
+    {% endfor %}
+}
+
+poe {
+     interface all;
+}
