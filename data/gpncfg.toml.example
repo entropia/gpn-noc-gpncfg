@@ -1,0 +1,4 @@
+[gpncfg]
+netbox-url = "https://netbox.example.tld"
+snmp-community = "fill me"
+netbox-token = "fill me"

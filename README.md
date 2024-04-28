@@ -18,4 +18,8 @@ poetry install
 
 # setup pre-commit hooks for autoformatting
 pre-commit install
+
+cp ./data/gpncfg.toml ~/.config/gpncfg.toml
+vim ~/.config/gpncfg.toml
+vim db/event.toml
 ```
