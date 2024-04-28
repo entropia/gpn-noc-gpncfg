@@ -37,6 +37,15 @@ class DataProvider:
                     serial,
                     location{name},
                     site{name},
+                    device_type{
+                        manufacturer{
+                            slug
+                        },
+                        slug
+                    },
+                    role{
+                        slug
+                    },
                     interfaces {
                         name,
                         ip_addresses { address },
