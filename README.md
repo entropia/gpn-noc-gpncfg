@@ -40,6 +40,6 @@ To provide gpncfg with necessary configuration, for example netbox credentials,
 copy the example config file into your config directory and edit it:
 
 ``` bash
-cp ./data/gpncfg.toml $XDG_CONFIG_HOME/gpncfg.toml
-eval $EDITOR ~/.config/gpncfg.toml
+cp ./data/gpncfg.toml.example $XDG_CONFIG_HOME/gpncfg.toml
+eval $EDITOR  $XDG_CONFIG_HOME/gpncfg.toml
 ```
