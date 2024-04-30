@@ -13,7 +13,7 @@ changes, update them in the nautobot instead.
 
 this config was generated at {timestamp}
 '''
-nautobot-tenant = "garry-gulaschtopf"
+nautobot-tenant = "Gulli Gulasch"
 override-fan-speed = 40
 output-dir = "./generated-configs"
 snmp-contact = "gpn-noc@lists.entropia.de"
