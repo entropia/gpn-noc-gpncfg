@@ -17,4 +17,3 @@ nautobot-tenant = "Gulli Gulasch"
 override-fan-speed = 40
 output-dir = "./generated-configs"
 snmp-contact = "gpn-noc@lists.entropia.de"
-snmp-location = "GPN22"

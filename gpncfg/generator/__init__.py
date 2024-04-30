@@ -77,11 +77,6 @@ class Generator:
             else:
                 device["hostname"] = "device-" + device["id"]
 
-            if device["location"] == None:
-                device["snmp_location"] = self.cfg.snmp_location
-            else:
-                device["snmp_location"] = device["location"]["name"]
-
             device["motd"] = self.cfg.motd.format(timestamp=ts)
 
             for iface in device["interfaces"]:

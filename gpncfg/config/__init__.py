@@ -115,11 +115,6 @@ def assemble():
         help="the snmp contact address of the devices",
         required=True,
     )
-    parser.add_argument(
-        "--snmp-location",
-        help="the snmp location of the devices",
-        required=True,
-    )
 
     options = parser.parse_args()
 
