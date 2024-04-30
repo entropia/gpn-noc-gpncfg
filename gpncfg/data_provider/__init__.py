@@ -15,10 +15,10 @@ class DataProvider:
         self.data = None
         self.cfg = cfg
 
-    def fetch_netbox_graphql(self):
+    def fetch_nautobot_graphql(self):
         transport = AIOHTTPTransport(
-            url=self.cfg.netbox_url + "/graphql/",
-            headers={"Authorization": "Token %s" % self.cfg.netbox_token},
+            url=self.cfg.nautobot_url + "/api/graphql/",
+            headers={"Authorization": "Token %s" % self.cfg.nautobot_token},
         )
 
         # Create a GraphQL client using the defined transport
@@ -28,23 +28,22 @@ class DataProvider:
         query = gql.gql(
             """
             query {
-                device_list(
-                    status:"active"
+                devices(
+                    status:"Active"
                     tenant:"%(tenant)s"
                 ) {
                     name,
                     id,
                     serial,
                     location{name},
-                    site{name},
                     device_type{
                         manufacturer{
-                            slug
+                            name,
                         },
-                        slug
+                        model,
                     },
-                    role{
-                        slug
+                    role {
+                        name,
                     },
                     interfaces {
                         name,
@@ -56,10 +55,9 @@ class DataProvider:
                         mode,
                         tagged_vlans{name,vid},
                         untagged_vlan{name,vid},
-                        poe_mode
                     }
                 },
-                vlan_list(
+                vlans(
                     tenant:"%(tenant)s"
                 ) {
                     name,
@@ -68,7 +66,7 @@ class DataProvider:
             }
             """
             % {
-                "tenant": self.cfg.netbox_tenant,
+                "tenant": self.cfg.nautobot_tenant,
             }
         )
 
@@ -77,12 +75,12 @@ class DataProvider:
 
         self.data = result
 
-    def fetch_netbox(self):
-        log.info(f"fetching device information from api at {self.cfg.netbox_url}")
+    def fetch_nautobot(self):
+        log.info(f"fetching device information from api at {self.cfg.nautobot_url}")
         # make sure the cache directory is good before doing possibly expensive
         # api calls
         self.assert_cache_writeable()
-        self.fetch_netbox_graphql()
+        self.fetch_nautobot_graphql()
         self.save_cache()
 
     def save_cache(self):

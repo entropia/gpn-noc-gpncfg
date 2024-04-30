@@ -34,7 +34,7 @@ class MainAction:
         if self.cfg.offline:
             dp.fetch_cache()
         else:
-            dp.fetch_netbox()
+            dp.fetch_nautobot()
 
         gen = Generator(self.cfg, dp.data)
         gen.fiddle()
