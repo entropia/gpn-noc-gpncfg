@@ -16,6 +16,7 @@ class DataProvider:
         self.cfg = cfg
 
     def fetch_nautobot_graphql(self):
+        log.info(f"fetching device information from api at {self.cfg.nautobot_url}")
         transport = AIOHTTPTransport(
             url=self.cfg.nautobot_url + "/api/graphql/",
             headers={"Authorization": "Token %s" % self.cfg.nautobot_token},
@@ -76,7 +77,6 @@ class DataProvider:
         self.data = result
 
     def fetch_nautobot(self):
-        log.info(f"fetching device information from api at {self.cfg.nautobot_url}")
         # make sure the cache directory is good before doing possibly expensive
         # api calls
         self.assert_cache_writeable()
