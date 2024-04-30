@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "gpncfg"
 version = "0.1.0"
-description = "Router and Switch Config Generator from Netbox/Nautobot"
+description = "Router and Switch Config Generator from Nautobot"
 authors = ["digital <didev@dinid.net>"]
 readme = "README.md"
 

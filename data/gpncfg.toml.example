@@ -1,4 +1,4 @@
 [gpncfg]
-netbox-url = "https://netbox.example.tld"
+nautobot-url = "https://nautobot.example.tld"
 snmp-community = "fill me"
-netbox-token = "fill me"
+nautobot-token = "fill me"

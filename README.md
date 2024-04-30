@@ -1,8 +1,8 @@
 # GPN Config-Generator
 
-gpncfg generates switch and router configs based on information from netbox/
-nautobot. This tool is used by the [Gulaschprogrammiernacht](https://gulas.ch)
-Network Operation Center to create the configuration for most devices.
+gpncfg generates switch and router configs based on information from nautobot.
+This tool is used by the [Gulaschprogrammiernacht](https://gulas.ch) Network
+Operation Center to create the configuration for most devices.
 
 Inspired by [ravens](https://github.com/blackdotraven) config-generator for
 GPN21 and Internetmanufaktur's [imfcfg](https://github.com/lub-dub/imfcfg)
@@ -36,8 +36,9 @@ with all the dependencies and install the pre-commit hooks.
 
 Inside the venv, run `gpncfg` or `python3 -m gpncfg` to execute the code.
 
-To provide gpncfg with necessary configuration, for example netbox credentials,
-copy the example config file into your config directory and edit it:
+To provide gpncfg with necessary configuration, for example nautobot
+credentials, copy the example config file into your config directory and edit
+it:
 
 ``` bash
 cp ./data/gpncfg.toml $XDG_CONFIG_HOME/gpncfg.toml
