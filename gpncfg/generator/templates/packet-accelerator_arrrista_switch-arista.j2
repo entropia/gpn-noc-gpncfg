@@ -1,16 +1,16 @@
 {# ------------------- #}
 {# GENERIC SYSTEM-SHIT #}
 {# ------------------- #}
-hostname {{ extra["hostname"] }}
+hostname {{ device["hostname"] }}
 !
 environment fan-speed override {{ config["override_fan_speed"] }}
 !
 banner motd
-{{ extra["motd"] }}
+{{ device["motd"] }}
 EOF
 !
 snmp-server contact "{{ config["snmp_contact"] }}"
-snmp-server location "{{ extra["snmp_location"] }}"
+snmp-server location "{{ device["snmp_location"] }}"
 snmp-server community {{ config["snmp_community"] }} ro
 !
 spanning-tree mode mstp
@@ -28,7 +28,7 @@ username admin role network-admin secret sha512 redacted
 !
 event-handler autoreload
    trigger on-boot
-   action bash /mnt/flash/autoreload.sh {{ config["autoupdate_interval"] }} {{ extra["serial"] }} {{ config["gateway"] }}
+   action bash /mnt/flash/autoreload.sh {{ config["autoupdate_interval"] }} {{ device["serial"] }} {{ config["gateway"] }}
    delay 60
    asynchronous
 exit
@@ -56,7 +56,7 @@ vlan {{ vlan["vid"] }}
 {# -------------------------- #}
 {# Ports / Network-Interfaces #}
 {# -------------------------- #}
-{% for interface in netbox["interfaces"] %}
+{% for interface in device["interfaces"] %}
 interface {{ interface["name"] }}
     description {{ interface["description"] }}
     {% if interface["address"] is not none %}

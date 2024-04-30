@@ -37,6 +37,7 @@ class MainAction:
             dp.fetch_netbox()
 
         gen = Generator(self.cfg, dp.data)
+        gen.fiddle()
         gen.generate()
 
         log.info("writing configs")
