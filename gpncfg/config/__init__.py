@@ -52,9 +52,9 @@ def assemble():
     )
 
     parser.add_argument(
-        "--cache-file",
-        default=os.path.join(get_cache_path(), "nautobot.json"),
-        help="where to store cached data",
+        "--cache-dir",
+        default=get_cache_path(),
+        help="directory in which to cache nautobot data",
     )
     parser.add_argument(
         "-c",
@@ -106,6 +106,12 @@ def assemble():
         required=True,
     )
     parser.add_argument(
+        "--populate-cache",
+        action="store_true",
+        default=False,
+        help="only populate the cache, do not generate any configs",
+    )
+    parser.add_argument(
         "--snmp-community",
         help="what snmp community the devices shall join",
         required=True,
@@ -125,7 +131,7 @@ def assemble():
     refuse_secret_on_cli(args, "--nautobot-token")
     refuse_secret_on_cli(args, "--snmp-community")
 
-    options.cache_file = os.path.expanduser(options.cache_file)
+    options.cache_dir = os.path.expanduser(options.cache_dir)
     options.log_level = options.log_level.upper()
     try:
         options.log_level = getattr(logging, options.log_level)

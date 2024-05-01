@@ -31,6 +31,13 @@ class MainAction:
 
         dp = DataProvider(self.cfg)
 
+        if self.cfg.populate_cache:
+            if self.cfg.offline:
+                log.fatal("cannot populate cache in offline mode")
+                exit(1)
+            dp.fetch_nautobot()
+            return
+
         if self.cfg.offline:
             dp.fetch_cache()
         else:
@@ -39,6 +46,10 @@ class MainAction:
         gen = Generator(self.cfg, dp.data)
         gen.fiddle()
         gen.generate()
+
+        if gen.configs == {}:
+            log.info("no configs to write, exiting")
+            return
 
         log.info("writing configs")
         for key in gen.configs:
