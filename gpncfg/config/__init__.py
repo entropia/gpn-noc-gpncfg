@@ -90,7 +90,7 @@ def assemble():
     parser.add_argument(
         "--nautobot-token",
         required=True,
-        help="authorization token for the nautobot apis",
+        help="authorization token for the nautobot apis. as a secret, it must not be provided on the cli",
     )
     parser.add_argument("--offline", help="run in offline mode", action="store_true")
     parser.add_argument(
@@ -113,7 +113,7 @@ def assemble():
     )
     parser.add_argument(
         "--snmp-community",
-        help="what snmp community the devices shall join",
+        help="what snmp community the devices shall join. as a secret, it must not be provided on the cli",
         required=True,
     )
     parser.add_argument(
