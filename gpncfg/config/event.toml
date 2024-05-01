@@ -9,12 +9,11 @@ motd = '''
 
 the configuration is automatically deployed.
 local changes will quickly be lost. to persist
-changes, update them in the the netbox instead.
+changes, update them in the nautobot instead.
 
 this config was generated at {timestamp}
 '''
-netbox-tenant = "garry-gulaschtopf"
+nautobot-tenant = "Gulli Gulasch"
 override-fan-speed = 40
 output-dir = "./generated-configs"
 snmp-contact = "gpn-noc@lists.entropia.de"
-snmp-location = "GPN22"

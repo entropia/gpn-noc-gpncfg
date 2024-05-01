@@ -18,6 +18,13 @@ def get_template_path():
     return epath
 
 
+TRANS_SLUG = str.maketrans(" ", "-", "()")
+
+
+def slugify(text):
+    return text.lower().translate(TRANS_SLUG)
+
+
 class Generator:
     def __init__(self, cfg, data):
         self.configs = {}
@@ -42,22 +49,22 @@ class Generator:
         self.fiddle_devices(ts)
 
     def sanetize_vlans(self):
-        trans = str.maketrans(" ", "-", "()")
-        for vlan in self.data["vlan_list"]:
-            vlan["name"] = vlan["name"].translate(trans)
+        for vlan in self.data["vlans"]:
+            vlan["name"] = slugify(vlan["name"])
 
     def fiddle_devices(self, ts):
-        for device in self.data["device_list"]:
+        for device in self.data["devices"]:
             # set usecase and device id
             if device["serial"] == "":
                 device["serial"] = "fallback-serial-" + device["id"]
 
-            device["usecase"] = (
-                device["role"]["slug"]
-                + "_"
-                + device["device_type"]["manufacturer"]["slug"]
-                + "_"
-                + device["device_type"]["slug"]
+            device["usecase"] = "_".join(
+                slugify(x)
+                for x in [
+                    device["role"]["name"],
+                    device["device_type"]["manufacturer"]["name"],
+                    device["device_type"]["model"],
+                ]
             )
             usecase = device["usecase"]
 
@@ -69,11 +76,6 @@ class Generator:
                 device["hostname"] = name
             else:
                 device["hostname"] = "device-" + device["id"]
-
-            if device["location"] == None:
-                device["snmp_location"] = self.cfg.snmp_location
-            else:
-                device["snmp_location"] = device["location"]["name"]
 
             device["motd"] = self.cfg.motd.format(timestamp=ts)
 
@@ -96,7 +98,7 @@ class Generator:
 
         missing_templates = []
 
-        for device in self.data["device_list"]:
+        for device in self.data["devices"]:
             usecase = device["usecase"]
 
             log.debug(
@@ -109,7 +111,7 @@ class Generator:
 
             context = dict()
             context["config"] = self.cfg.__dict__
-            context["vlan_list"] = self.data["vlan_list"]
+            context["vlans"] = self.data["vlans"]
             context["device"] = device
 
             try:

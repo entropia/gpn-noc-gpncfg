@@ -10,7 +10,7 @@ banner motd
 EOF
 !
 snmp-server contact "{{ config["snmp_contact"] }}"
-snmp-server location "{{ device["snmp_location"] }}"
+snmp-server location "{{ device["location"]["name"] }}"
 snmp-server community {{ config["snmp_community"] }} ro
 !
 spanning-tree mode mstp
@@ -47,7 +47,7 @@ ip access-list FILTER_DHCP_SERVER
 {# ----- #}
 {# VLANs #}
 {# ----- #}
-{% for vlan in vlan_list %}
+{% for vlan in vlans %}
 vlan {{ vlan["vid"] }}
    name {{ vlan["name"] }}
 !

@@ -53,7 +53,7 @@ def assemble():
 
     parser.add_argument(
         "--cache-file",
-        default=os.path.join(get_cache_path(), "netbox.json"),
+        default=os.path.join(get_cache_path(), "nautobot.json"),
         help="where to store cached data",
     )
     parser.add_argument(
@@ -80,15 +80,17 @@ def assemble():
         required=True,
     )
     parser.add_argument(
-        "--netbox-tenant",
-        help="only generate configs for devices assigned to this tenant. uses the netbox slug, not the id",
+        "--nautobot-tenant",
+        help="only generate configs for devices assigned to this tenant. uses the nautobot name, not the id",
         required=True,
     )
     parser.add_argument(
-        "--netbox-url", required=True, help="url to the netbox instance"
+        "--nautobot-url", required=True, help="url to the nautobot instance"
     )
     parser.add_argument(
-        "--netbox-token", required=True, help="authorization token for the netbox apis"
+        "--nautobot-token",
+        required=True,
+        help="authorization token for the nautobot apis",
     )
     parser.add_argument("--offline", help="run in offline mode", action="store_true")
     parser.add_argument(
@@ -113,11 +115,6 @@ def assemble():
         help="the snmp contact address of the devices",
         required=True,
     )
-    parser.add_argument(
-        "--snmp-location",
-        help="the snmp location of the devices",
-        required=True,
-    )
 
     options = parser.parse_args()
 
@@ -125,7 +122,7 @@ def assemble():
         1
     ]
 
-    refuse_secret_on_cli(args, "--netbox-token")
+    refuse_secret_on_cli(args, "--nautobot-token")
     refuse_secret_on_cli(args, "--snmp-community")
 
     options.cache_file = os.path.expanduser(options.cache_file)
