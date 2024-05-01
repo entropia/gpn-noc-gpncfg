@@ -53,13 +53,13 @@ class DataProvider:
                     interfaces {
                         name,
                         ip_addresses { address },
-                        enabled,
                         description,
                         id,
                         type,
                         mode,
                         tagged_vlans{name,vid},
                         untagged_vlan{name,vid},
+                        _custom_field_data,
                     }
                 },
                 vlans(
