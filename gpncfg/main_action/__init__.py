@@ -47,6 +47,10 @@ class MainAction:
         gen.fiddle()
         gen.generate()
 
+        if gen.configs == {}:
+            log.info("no configs to write, exiting")
+            return
+
         log.info("writing configs")
         for key in gen.configs:
             with open(os.path.join(self.cfg.output_dir, "config-" + key), "w+") as file:
