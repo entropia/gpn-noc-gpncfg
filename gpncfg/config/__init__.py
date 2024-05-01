@@ -106,6 +106,12 @@ def assemble():
         required=True,
     )
     parser.add_argument(
+        "--populate-cache",
+        action="store_true",
+        default=False,
+        help="only populate the cache, do not generate any configs",
+    )
+    parser.add_argument(
         "--snmp-community",
         help="what snmp community the devices shall join",
         required=True,
