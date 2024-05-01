@@ -79,17 +79,52 @@ class Generator:
 
             device["motd"] = self.cfg.motd.format(timestamp=ts)
 
-            for iface in device["interfaces"]:
-                tagged = [str(vlan["vid"]) for vlan in iface["tagged_vlans"]]
-                if len(tagged) != 0:
-                    iface["tagged_vlans"] = ",".join(tagged)
-                else:
-                    iface["tagged_vlans"] = "none"
-
             # add data based on usecase
-            if usecase == "switch_arista_sampelModel":
-                print("doing some stuff")
+            if usecase == "access-switch_juniper_ex3300-48p":
+                # sort interfaces into physical and virtual ones as they are
+                # treated very differently.
+                device["physical_interfaces"] = list()
+                device["virtual_interfaces"] = list()
+                device["vids"] = list()
 
+                for iface in device["interfaces"]:
+                    iface = copy.deepcopy(iface)
+
+                    if iface["type"] == "VIRTUAL":
+                        #
+                        device["vids"].append(iface["untagged_vlan"]["vid"])
+                        # set ip addresses assigned in nautobot, if there are
+                        # none then do dhcp
+                        if len(iface["ip_addresses"]) > 0:
+                            iface["do_dhcp"] = False
+                        else:
+                            iface["do_dhcp"] = True
+                        device["virtual_interfaces"].append(iface)
+
+                    else:
+                        # format the list of tagged vlans to a string
+                        tagged = ["["]
+                        tagged.extend(
+                            slugify(vlan["name"]) for vlan in iface["tagged_vlans"]
+                        )
+                        tagged.append("]")
+                        iface["tagged_vlans_text"] = " ".join(tagged)
+
+                        # slugify the untagged vlan name
+                        if iface["untagged_vlan"] is not None:
+                            iface["untagged_vlan"]["name"] = slugify(
+                                iface["untagged_vlan"]["name"]
+                            )
+
+                        device["physical_interfaces"].append(iface)
+
+            elif usecase == "switch_arista_sampelModel":
+                for iface in device["interfaces"]:
+                    tagged = [str(vlan["vid"]) for vlan in iface["tagged_vlans"]]
+                    if len(tagged) != 0:
+                        iface["tagged_vlans"] = ",".join(tagged)
+                    else:
+                        iface["tagged_vlans"] = "none"
             elif usecase == "switch_arista_1234":
                 print("doing other stuff")
 
