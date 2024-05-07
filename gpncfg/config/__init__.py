@@ -5,6 +5,10 @@ import sys
 
 import configargparse
 
+# REMEMBER: only WARNING and higher levels are shown until logging is fully set
+# up later in `assemble`.
+log = logging.getLogger(__name__)
+
 
 def get_cache_path():
     if "XDG_CACHE_HOME" in os.environ:
