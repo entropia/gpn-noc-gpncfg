@@ -4,7 +4,7 @@ import logging
 import os
 from pprint import pprint as pp
 
-from .. import config
+from ..config import ConfigProvider
 from ..data_provider import DataProvider
 from ..generator import Generator
 
@@ -19,9 +19,10 @@ class MainAction:
     def __init__(self):
         logging.basicConfig()
 
-        self.cfg = config.assemble()
-
-        logging.getLogger("gpncfg").setLevel(self.cfg.log_level)
+        cfgp = ConfigProvider()
+        cfgp.collect()
+        cfgp.assemble()
+        self.cfg = cfgp.options
 
         log.info("gpncfg greets gulli gulasch")
 

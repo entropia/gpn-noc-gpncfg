@@ -45,104 +45,115 @@ def refuse_secret_on_cli(args, name):
         exit(1)
 
 
-def assemble():
-    config_path = get_config_path()
+class ConfigProvider:
+    def __init__(self):
+        self.config = ()
 
-    print(get_eventtoml_path())
-    parser = configargparse.ArgumentParser(
-        # personal config file overrides event config
-        default_config_files=[get_eventtoml_path(), config_path],
-        config_file_parser_class=configargparse.TomlConfigParser(["gpncfg"]),
-    )
+    def collect(self):
+        config_path = get_config_path()
 
-    parser.add_argument(
-        "--cache-dir",
-        default=get_cache_path(),
-        help="directory in which to cache nautobot data",
-    )
-    parser.add_argument(
-        "-c",
-        "--config",
-        help="path to the config file",
-        is_config_file=True,
-        # required=True,
-    )
-    parser.add_argument(
-        "--autoupdate-interval",
-        help="how frequently the devices try to update their configuration",
-        required=True,
-    )
-    parser.add_argument(
-        "--gateway",
-        help="the default gateway for all devices",
-        required=True,
-    )
-    parser.add_argument("--log-level", default="INFO", help="verbosity of the logger")
-    parser.add_argument(
-        "--motd",
-        help="message of the day to be displayed on switch login",
-        required=True,
-    )
-    parser.add_argument(
-        "--nautobot-tenant",
-        help="only generate configs for devices assigned to this tenant. uses the nautobot name, not the id",
-        required=True,
-    )
-    parser.add_argument(
-        "--nautobot-url", required=True, help="url to the nautobot instance"
-    )
-    parser.add_argument(
-        "--nautobot-token",
-        required=True,
-        help="authorization token for the nautobot apis. as a secret, it must not be provided on the cli",
-    )
-    parser.add_argument("--offline", help="run in offline mode", action="store_true")
-    parser.add_argument(
-        "-o",
-        "--output-dir",
-        # default="./generated-configs",
-        help="where to output the configs",
-        required=True,
-    )
-    parser.add_argument(
-        "--override-fan-speed",
-        help="the default fan speed of all the devices",
-        required=True,
-    )
-    parser.add_argument(
-        "--populate-cache",
-        action="store_true",
-        default=False,
-        help="only populate the cache, do not generate any configs",
-    )
-    parser.add_argument(
-        "--snmp-community",
-        help="what snmp community the devices shall join. as a secret, it must not be provided on the cli",
-        required=True,
-    )
-    parser.add_argument(
-        "--snmp-contact",
-        help="the snmp contact address of the devices",
-        required=True,
-    )
-
-    options = parser.parse_args()
-
-    args = parser.get_source_to_settings_dict().get("command_line", {"": [[], []]})[""][
-        1
-    ]
-
-    refuse_secret_on_cli(args, "--nautobot-token")
-    refuse_secret_on_cli(args, "--snmp-community")
-
-    options.cache_dir = os.path.expanduser(options.cache_dir)
-    options.log_level = options.log_level.upper()
-    try:
-        options.log_level = getattr(logging, options.log_level)
-    except AttributeError:
-        print(
-            "error: '%s' is not a valid log level" % options.log_level, file=sys.stderr
+        print(get_eventtoml_path())
+        parser = configargparse.ArgumentParser(
+            # personal config file overrides event config
+            default_config_files=[get_eventtoml_path(), config_path],
+            config_file_parser_class=configargparse.TomlConfigParser(["gpncfg"]),
         )
-        exit(1)
 
-    return options
+        parser.add_argument(
+            "--cache-dir",
+            default=get_cache_path(),
+            help="directory in which to cache nautobot data",
+        )
+        parser.add_argument(
+            "-c",
+            "--config",
+            help="path to the config file",
+            is_config_file=True,
+            # required=True,
+        )
+        parser.add_argument(
+            "--autoupdate-interval",
+            help="how frequently the devices try to update their configuration",
+            required=True,
+        )
+        parser.add_argument(
+            "--gateway",
+            help="the default gateway for all devices",
+            required=True,
+        )
+        parser.add_argument(
+            "--log-level", default="INFO", help="verbosity of the logger"
+        )
+        parser.add_argument(
+            "--motd",
+            help="message of the day to be displayed on switch login",
+            required=True,
+        )
+        parser.add_argument(
+            "--nautobot-tenant",
+            help="only generate configs for devices assigned to this tenant. uses the nautobot name, not the id",
+            required=True,
+        )
+        parser.add_argument(
+            "--nautobot-url", required=True, help="url to the nautobot instance"
+        )
+        parser.add_argument(
+            "--nautobot-token",
+            required=True,
+            help="authorization token for the nautobot apis. as a secret, it must not be provided on the cli",
+        )
+        parser.add_argument(
+            "--offline", help="run in offline mode", action="store_true"
+        )
+        parser.add_argument(
+            "-o",
+            "--output-dir",
+            # default="./generated-configs",
+            help="where to output the configs",
+            required=True,
+        )
+        parser.add_argument(
+            "--override-fan-speed",
+            help="the default fan speed of all the devices",
+            required=True,
+        )
+        parser.add_argument(
+            "--populate-cache",
+            action="store_true",
+            default=False,
+            help="only populate the cache, do not generate any configs",
+        )
+        parser.add_argument(
+            "--snmp-community",
+            help="what snmp community the devices shall join. as a secret, it must not be provided on the cli",
+            required=True,
+        )
+        parser.add_argument(
+            "--snmp-contact",
+            help="the snmp contact address of the devices",
+            required=True,
+        )
+
+        options = parser.parse_args()
+
+        args = parser.get_source_to_settings_dict().get("command_line", {"": [[], []]})[
+            ""
+        ][1]
+
+        refuse_secret_on_cli(args, "--nautobot-token")
+        refuse_secret_on_cli(args, "--snmp-community")
+
+        self.options = options
+
+    def assemble(self):
+        self.options.log_level = self.options.log_level.upper()
+        try:
+            self.options.log_level = getattr(logging, self.options.log_level)
+        except AttributeError:
+            log.error(
+                "cannot configure invalid log level '{}'".format(self.options.log_level)
+            )
+            exit(1)
+        logging.getLogger("gpncfg").setLevel(self.options.log_level)
+
+        self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
