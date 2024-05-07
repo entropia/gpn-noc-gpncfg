@@ -13,17 +13,17 @@ GPN21 and Internetmanufaktur's [imfcfg](https://github.com/lub-dub/imfcfg)
 
 * `dev-env.sh` sets up the environment
 * `data` recommended user config for gpncfg
-* `data/gpncfg.toml.example` recommended user config for gpncfg
+  * `data/gpncfg.toml.example` recommended user config for gpncfg
 * `generated-configs` default output dir for generated device configs
 * `gpncfg` python module with gpncfg source code
+  * `gpncfg/__init__.py` entry point for libraries
+  * `gpncfg/__main__.py` entry point for module execution
   * `gpncfg/config` config parsing which affects gpncfgs behavior
-  * `gpncfg/config/event.toml` event specific configuration
+    * `gpncfg/config/event.toml` event specific configuration
   * `gpncfg/data_provider` information fetching from source of truth
   * `gpncfg/generator` data juggling and templating logic
-  * `gpncfg/generator/templates` switch/router config templates
-  * `gpncfg/__init__.py` entry point for libraries
+    * `gpncfg/generator/templates` switch/router config templates
   * `gpncfg/main_action` driver and glue between other components
-  * `gpncfg/__main__.py` entry point for module execution
 * `pyproject.toml` packaging and build definitions
 * `README.md` human readable project information
 
