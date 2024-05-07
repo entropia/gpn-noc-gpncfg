@@ -80,6 +80,18 @@ class Generator:
             # use json to escape special characters
             device["motd"] = json.dumps(self.cfg.motd.format(timestamp=ts))
 
+            try:
+                device["gateway"] = device["primary_ip4"]["parent"]["rel_gateway"][
+                    "host"
+                ]
+            except TypeError as e:
+                log.warn(
+                    "device has no gateway (name '{}' serial '{}')".format(
+                        device["name"], device["serial"]
+                    )
+                )
+                device["gateway"] = None
+
             # add data based on usecase
             if usecase == "access-switch_juniper_ex3300-48p":
                 # sort interfaces into physical and virtual ones as they are
