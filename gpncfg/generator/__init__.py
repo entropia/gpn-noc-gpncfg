@@ -107,7 +107,15 @@ class Generator:
                     iface = copy.deepcopy(iface)
 
                     if iface["type"] == "VIRTUAL":
-                        #
+                        if iface["untagged_vlan"] is None:
+                            log.warn(
+                                "virtual interface '{}' with no untagged vid on device '{}' serial '{}'".format(
+                                    iface["name"],
+                                    device["name"],
+                                    device["serial"],
+                                )
+                            )
+                            continue
                         device["vids"].append(iface["untagged_vlan"]["vid"])
                         # set ip addresses assigned in nautobot, if there are
                         # none then do dhcp
