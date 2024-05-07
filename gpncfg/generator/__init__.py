@@ -93,7 +93,10 @@ class Generator:
                 device["gateway"] = None
 
             # add data based on usecase
-            if usecase == "access-switch_juniper_ex3300-48p":
+            if (
+                usecase == "access-switch_juniper_ex3300-24p"
+                or usecase == "access-switch_juniper_ex3300-48p"
+            ):
                 # sort interfaces into physical and virtual ones as they are
                 # treated very differently.
                 device["physical_interfaces"] = list()
