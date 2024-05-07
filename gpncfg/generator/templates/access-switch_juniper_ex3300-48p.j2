@@ -143,9 +143,11 @@ ethernet-switching-options {
     }
     bpdu-block {
         {% for iface in device["physical_interfaces"] %}
-        {% if not iface["_custom_field_data"]["trusted"] %}
+            {% if iface["_custom_field_data"]["trusted"] %}
+        # interface {{ iface["name"] }}.0;
+            {% else %}
         interface {{ iface["name"] }}.0;
-        {% endif %}
+            {% endif %}
         {% endfor %}
         disable-timeout 10;
    }
