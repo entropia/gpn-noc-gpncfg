@@ -50,6 +50,14 @@ class DataProvider:
                     role {
                         name,
                     },
+                    primary_ip4 {
+                      address
+                      parent {
+                        rel_gateway {
+                          host
+                        }
+                      }
+                    }
                     interfaces {
                         name,
                         ip_addresses { address },
