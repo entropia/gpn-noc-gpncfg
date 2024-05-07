@@ -73,11 +73,12 @@ class Generator:
 
             # add general stuff
             if (name := device["name"]) != None:
-                device["hostname"] = name
+                device["nodename"] = slugify(name)
             else:
-                device["hostname"] = "device-" + device["id"]
+                device["nodename"] = "device-" + device["id"]
 
-            device["motd"] = self.cfg.motd.format(timestamp=ts)
+            # use json to escape special characters
+            device["motd"] = json.dumps(self.cfg.motd.format(timestamp=ts))
 
             # add data based on usecase
             if usecase == "access-switch_juniper_ex3300-48p":
