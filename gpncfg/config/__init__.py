@@ -2,12 +2,37 @@
 import logging
 import os
 import sys
+from dataclasses import dataclass
 
 import configargparse
+import toml
+from danoan.toml_dataclass import TomlDataClassIO
 
 # REMEMBER: only WARNING and higher levels are shown until logging is fully set
 # up later in `assemble`.
 log = logging.getLogger(__name__)
+
+
+@dataclass
+class RootInfo(TomlDataClassIO):
+    md5: str
+    sha256: str
+    sha512: str
+
+
+@dataclass
+class UserInfo(TomlDataClassIO):
+    uid: int
+    name: str
+    ecdsa: [str]
+    ed25519: [str]
+    rsa: [str]
+
+
+@dataclass
+class LoginInfo(TomlDataClassIO):
+    root: RootInfo
+    user: str
 
 
 def get_cache_path():
@@ -78,6 +103,11 @@ class ConfigProvider:
         parser.add_argument(
             "--gateway",
             help="the default gateway for all devices",
+            required=True,
+        )
+        parser.add_argument(
+            "--login-file",
+            help="path to the login file, which contains the root passwords and the user definitions",
             required=True,
         )
         parser.add_argument(
@@ -156,3 +186,6 @@ class ConfigProvider:
         logging.getLogger("gpncfg").setLevel(self.options.log_level)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
+
+        with open(self.options.login_file, "r") as f:
+            self.options.login = LoginInfo.read(f)
