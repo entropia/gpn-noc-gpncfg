@@ -22,7 +22,7 @@ class MainAction:
         logging.basicConfig()
         logging.getLogger("gpncfg").setLevel(self.cfg.log_level)
 
-        log.info("gpncfg greets garry gulaschtopf")
+        log.info("gpncfg greets gulli gulasch")
 
         os.makedirs(self.cfg.output_dir, exist_ok=True)
         assert os.access(
