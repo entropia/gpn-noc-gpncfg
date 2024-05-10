@@ -45,14 +45,15 @@ def get_cache_path():
     return cache_path
 
 
-def get_config_path():
+def get_config_path(file):
     if "XDG_CONFIG_HOME" in os.environ:
         config_home = os.environ["XDG_CONFIG_HOME"]
     else:
         config_home = os.path.join(os.environ["HOME"], ".config")
-    config_path = os.path.join(config_home, "gpncfg.toml")
 
-    return config_path
+    config_home = os.path.join(config_home, "gpncfg")
+
+    return os.path.join(config_home, file)
 
 
 def get_eventtoml_path():
@@ -75,7 +76,7 @@ class ConfigProvider:
         self.config = ()
 
     def collect(self):
-        config_path = get_config_path()
+        config_path = get_config_path("gpncfg.toml")
 
         parser = configargparse.ArgumentParser(
             # personal config file overrides event config
@@ -107,8 +108,8 @@ class ConfigProvider:
         )
         parser.add_argument(
             "--login-file",
+            default=get_config_path("login.toml"),
             help="path to the login file, which contains the root passwords and the user definitions",
-            required=True,
         )
         parser.add_argument(
             "--log-level", default="INFO", help="verbosity of the logger"
