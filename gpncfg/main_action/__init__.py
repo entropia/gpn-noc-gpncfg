@@ -6,7 +6,8 @@ from pprint import pprint as pp
 
 from ..config import ConfigProvider
 from ..data_provider import DataProvider
-from ..generator import Generator
+from ..fiddle import Fiddler
+from ..render import Renderer
 
 log = logging.getLogger(__name__)
 
@@ -45,16 +46,18 @@ class MainAction:
         else:
             dp.fetch_nautobot()
 
-        gen = Generator(self.cfg, dp.data)
-        gen.fiddle()
-        gen.generate()
+        fiddler = Fiddler(self.cfg)
+        data = fiddler.fiddle(dp.data)
 
-        if gen.configs == {}:
+        renderer = Renderer(self.cfg)
+        configs = renderer.render(data)
+
+        if not configs:
             log.info("no configs to write, exiting")
             return
 
         log.info("writing configs")
-        for key in gen.configs:
+        for key in configs:
             with open(os.path.join(self.cfg.output_dir, "config-" + key), "w+") as file:
                 log.debug("writing config for serial " + key)
-                print(gen.configs[key], file=file)
+                print(configs[key], file=file)
