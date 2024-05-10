@@ -52,7 +52,6 @@ class ConfigProvider:
     def collect(self):
         config_path = get_config_path()
 
-        print(get_eventtoml_path())
         parser = configargparse.ArgumentParser(
             # personal config file overrides event config
             default_config_files=[get_eventtoml_path(), config_path],
