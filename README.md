@@ -32,7 +32,9 @@ GPN21 and Internetmanufaktur's [imfcfg](https://github.com/lub-dub/imfcfg)
 gpncfg is using poetry to manage dependencies and packaging. Use the provided
 `dev-env.sh` script to set up a development environemnt. This will provide a
 python [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#activate-a-virtual-environment)
-with all the dependencies and install the pre-commit hooks.
+with all the dependencies and install the pre-commit hooks. The virtual
+environment needs to be activated by sourcing the activation script at
+`<venv>/bin/activate`. Versions for shells other than bash are provided as well.
 
 Inside the venv, run `gpncfg` or `python3 -m gpncfg` to execute the code.
 
