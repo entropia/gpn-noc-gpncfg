@@ -187,6 +187,7 @@ class ConfigProvider:
         logging.getLogger("gpncfg").setLevel(self.options.log_level)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
+        self.options.login_file = os.path.expanduser(self.options.login_file)
 
         with open(self.options.login_file, "r") as f:
             self.options.login = LoginInfo.read(f)
