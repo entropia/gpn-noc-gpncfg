@@ -21,9 +21,10 @@ GPN21 and Internetmanufaktur's [imfcfg](https://github.com/lub-dub/imfcfg)
   * `gpncfg/config` config parsing which affects gpncfgs behavior
     * `gpncfg/config/event.toml` event specific configuration
   * `gpncfg/data_provider` information fetching from source of truth
-  * `gpncfg/generator` data juggling and templating logic
-    * `gpncfg/generator/templates` switch/router config templates
+  * `gpncfg/fiddle` modify the nautobot data to simplify the jinja2 templates
   * `gpncfg/main_action` driver and glue between other components
+  * `gpncfg/render` render the templates using the nautobot data
+    * `gpncfg/render/templates` switch/router config templates
 * `pyproject.toml` packaging and build definitions
 * `README.md` human readable project information
 
