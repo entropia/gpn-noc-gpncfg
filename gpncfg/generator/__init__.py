@@ -73,23 +73,82 @@ class Generator:
 
             # add general stuff
             if (name := device["name"]) != None:
-                device["hostname"] = name
+                device["nodename"] = slugify(name)
             else:
-                device["hostname"] = "device-" + device["id"]
+                device["nodename"] = "device-" + device["id"]
 
-            device["motd"] = self.cfg.motd.format(timestamp=ts)
+            # use json to escape special characters
+            device["motd"] = json.dumps(self.cfg.motd.format(timestamp=ts))
 
-            for iface in device["interfaces"]:
-                tagged = [str(vlan["vid"]) for vlan in iface["tagged_vlans"]]
-                if len(tagged) != 0:
-                    iface["tagged_vlans"] = ",".join(tagged)
-                else:
-                    iface["tagged_vlans"] = "none"
+            try:
+                device["gateway"] = device["primary_ip4"]["parent"]["rel_gateway"][
+                    "host"
+                ]
+            except TypeError as e:
+                log.warn(
+                    "device has no gateway (name '{}' serial '{}')".format(
+                        device["name"], device["serial"]
+                    )
+                )
+                device["gateway"] = None
 
             # add data based on usecase
-            if usecase == "switch_arista_sampelModel":
-                print("doing some stuff")
+            if (
+                usecase == "access-switch_juniper_ex3300-24p"
+                or usecase == "access-switch_juniper_ex3300-48p"
+            ):
+                # sort interfaces into physical and virtual ones as they are
+                # treated very differently.
+                device["physical_interfaces"] = list()
+                device["virtual_interfaces"] = list()
+                device["vids"] = list()
 
+                for iface in device["interfaces"]:
+                    iface = copy.deepcopy(iface)
+
+                    if iface["type"] == "VIRTUAL":
+                        if iface["untagged_vlan"] is None:
+                            log.warn(
+                                "virtual interface '{}' with no untagged vid on device '{}' serial '{}'".format(
+                                    iface["name"],
+                                    device["name"],
+                                    device["serial"],
+                                )
+                            )
+                            continue
+                        device["vids"].append(iface["untagged_vlan"]["vid"])
+                        # set ip addresses assigned in nautobot, if there are
+                        # none then do dhcp
+                        if len(iface["ip_addresses"]) > 0:
+                            iface["do_dhcp"] = False
+                        else:
+                            iface["do_dhcp"] = True
+                        device["virtual_interfaces"].append(iface)
+
+                    else:
+                        # format the list of tagged vlans to a string
+                        tagged = ["["]
+                        tagged.extend(
+                            slugify(vlan["name"]) for vlan in iface["tagged_vlans"]
+                        )
+                        tagged.append("]")
+                        iface["tagged_vlans_text"] = " ".join(tagged)
+
+                        # slugify the untagged vlan name
+                        if iface["untagged_vlan"] is not None:
+                            iface["untagged_vlan"]["name"] = slugify(
+                                iface["untagged_vlan"]["name"]
+                            )
+
+                        device["physical_interfaces"].append(iface)
+
+            elif usecase == "switch_arista_sampelModel":
+                for iface in device["interfaces"]:
+                    tagged = [str(vlan["vid"]) for vlan in iface["tagged_vlans"]]
+                    if len(tagged) != 0:
+                        iface["tagged_vlans"] = ",".join(tagged)
+                    else:
+                        iface["tagged_vlans"] = "none"
             elif usecase == "switch_arista_1234":
                 print("doing other stuff")
 
