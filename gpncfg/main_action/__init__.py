@@ -59,7 +59,10 @@ class MainAction:
             return
 
         log.info("writing configs")
-        for key in configs:
-            with open(os.path.join(self.cfg.output_dir, "config-" + key), "w+") as file:
-                log.debug("writing config for serial " + key)
-                print(configs[key], file=file)
+        for serial, cwc in configs.items():
+            cwc.path = os.path.abspath(
+                os.path.join(self.cfg.output_dir, "config-" + serial)
+            )
+            with open(cwc.path, "w+") as file:
+                log.debug("writing config for serial " + serial)
+                print(cwc.config, file=file)
