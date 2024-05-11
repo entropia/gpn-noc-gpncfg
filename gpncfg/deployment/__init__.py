@@ -57,16 +57,20 @@ class DeployDispatcher:
             log.error("failed to reach device, no more addresses to try")
             return False
         log.debug("connected, now uploading config")
-        netmiko.file_transfer(
-            netcon,
-            source_file=cwc.path,
-            dest_file="gpncfg-upload.cfg",
-            overwrite_file=True,
-        )
+        if not self.cfg.dry_deploy:
+            netmiko.file_transfer(
+                netcon,
+                source_file=cwc.path,
+                dest_file="gpncfg-upload.cfg",
+                overwrite_file=True,
+            )
+
         log.debug("config uploaded, entering configuration mode")
         log.debug(netcon.config_mode())
         log.debug("applying config")
-        send_command(log, netcon, "load override /var/tmp/gpncfg-upload.cfg")
+        if not self.cfg.dry_deploy:
+            send_command(log, netcon, "load override /var/tmp/gpncfg-upload.cfg")
         send_command(log, netcon, "show | compare")
-        send_command(log, netcon, "commit confirmed 10", read_timeout=120)
+        if not self.cfg.dry_deploy:
+            send_command(log, netcon, "commit confirmed 10", read_timeout=120)
         log.info("config uploaded and commited with automatic rollback")
