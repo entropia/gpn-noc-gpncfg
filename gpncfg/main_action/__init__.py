@@ -2,7 +2,7 @@
 
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor
+from concurrent import futures
 from pprint import pprint as pp
 
 import gpncfg
@@ -71,11 +71,17 @@ class MainAction:
 
         log.info("deploying configs")
         dispatch = DeployDispatcher(self.cfg)
-        with ThreadPoolExecutor() as pool:
+        with futures.ThreadPoolExecutor() as pool:
+            futs = list()
             for serial, cwc in configs.items():
                 log.debug(
                     "connecting to device {name} at {addresses}".format(
                         **cwc.context["device"]
                     )
                 )
-                pool.submit(dispatch.deploy_device, cwc)
+                futs.append(pool.submit(dispatch.deploy_device, cwc))
+
+            for result in futures.as_completed(futs):
+                if exc := result.exception(0):
+                    log.error("thread raised exception", exc_info=exc)
+                log.debug("thread finished with result {}".format(result.result(0)))

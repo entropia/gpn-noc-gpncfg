@@ -29,13 +29,14 @@ class DeployDispatcher:
             usecase == "access-switch_juniper_ex3300-24p"
             or usecase == "access-switch_juniper_ex3300-48p"
         ):
-            self.deploy_junos(cwc)
+            return self.deploy_junos(cwc)
         else:
             log.error(
                 "no deployment method for device {nodename} ({serial}) with usecase {usecase}".format(
                     **device
                 )
             )
+            return False
 
     def deploy_junos(self, cwc):
         device = cwc.context["device"]
