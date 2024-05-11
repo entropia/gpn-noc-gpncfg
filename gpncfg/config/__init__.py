@@ -102,6 +102,16 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--deploy-key",
+            help="path to a private ssh key file which is used to log in to switches to deploy configs",
+            required=True,
+        )
+        parser.add_argument(
+            "--deploy-user",
+            default="gpncfg",
+            help="what user to authenticate as when deploying configs",
+        )
+        parser.add_argument(
             "--gateway",
             help="the default gateway for all devices",
             required=True,
@@ -187,6 +197,7 @@ class ConfigProvider:
         logging.getLogger("gpncfg").setLevel(self.options.log_level)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
+        self.options.deploy_key = os.path.expanduser(self.options.deploy_key)
         self.options.login_file = os.path.expanduser(self.options.login_file)
 
         with open(self.options.login_file, "r") as f:
