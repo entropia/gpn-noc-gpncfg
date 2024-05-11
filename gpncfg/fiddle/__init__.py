@@ -79,6 +79,17 @@ class Fiddler:
                 )
                 device["gateway"] = None
 
+            device["addresses"] = list()
+            for key in ["primary_ip6", "primary_ip4"]:
+                if addr := device.get(key):
+                    device["addresses"].append(addr["host"])
+
+            log.info(
+                "determined primary addreses {addresses} for device {name} ({serial})".format(
+                    **device
+                )
+            )
+
             # add data based on usecase
             if (
                 usecase == "access-switch_juniper_ex3300-24p"
