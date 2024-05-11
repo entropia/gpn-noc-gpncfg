@@ -52,6 +52,7 @@ class DataProvider:
                     },
                     primary_ip4 {
                       address
+                      host
                       parent {
                         rel_gateway {
                           host
