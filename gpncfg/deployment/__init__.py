@@ -54,7 +54,11 @@ class DeployDispatcher:
             except netmiko.exceptions.NetmikoTimeoutException:
                 log.debug(f"failed to contact {addr}, trying next address if possible")
         if not netcon:
-            log.error("failed to reach device, no more addresses to try")
+            log.error(
+                "failed to deploy because addresses are unreachable {addresses}".format(
+                    **device
+                )
+            )
             return False
         log.debug("connected, now uploading config")
         if not self.cfg.dry_deploy:
