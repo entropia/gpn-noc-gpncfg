@@ -2,6 +2,7 @@
 
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint as pp
 
 import gpncfg
@@ -70,10 +71,11 @@ class MainAction:
 
         log.info("deploying configs")
         dispatch = DeployDispatcher(self.cfg)
-        for serial, cwc in configs.items():
-            log.debug(
-                "connecting to device {name} at {addresses}".format(
-                    **cwc.context["device"]
+        with ThreadPoolExecutor() as pool:
+            for serial, cwc in configs.items():
+                log.debug(
+                    "connecting to device {name} at {addresses}".format(
+                        **cwc.context["device"]
+                    )
                 )
-            )
-            dispatch.deploy_device(cwc)
+                pool.submit(dispatch.deploy_device, cwc)
