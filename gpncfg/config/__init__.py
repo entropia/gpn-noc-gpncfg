@@ -102,6 +102,12 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--dry-deploy",
+            action="store_true",
+            default=False,
+            help="generate configs and connect to devices but do not commit configs",
+        )
+        parser.add_argument(
             "--deploy-key",
             help="path to a private ssh key file which is used to log in to switches to deploy configs",
             required=True,
