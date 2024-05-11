@@ -38,14 +38,10 @@ class DeployDispatcher:
             )
             return False
 
-    def deploy_junos(self, cwc):
-        device = cwc.context["device"]
-        log = logging.getLogger(__name__).getChild("{nodename}".format(**device))
-        log.debug("starting deployment")
-        netcon = None
+    def connect_junos(self, device):
         for addr in device["addresses"]:
             try:
-                netcon = netmiko.ConnectHandler(
+                return netmiko.ConnectHandler(
                     device_type="juniper_junos",
                     host=device["addresses"][0],
                     username=self.cfg.deploy_user,
@@ -53,6 +49,15 @@ class DeployDispatcher:
                 )
             except netmiko.exceptions.NetmikoTimeoutException:
                 log.debug(f"failed to contact {addr}, trying next address if possible")
+        return None
+
+    def deploy_junos(self, cwc):
+        device = cwc.context["device"]
+
+        log = logging.getLogger(__name__).getChild("{nodename}".format(**device))
+        log.debug("starting deployment")
+
+        netcon = self.connect_junos(device)
         if not netcon:
             log.error(
                 "failed to deploy because addresses are unreachable {addresses}".format(
@@ -60,6 +65,7 @@ class DeployDispatcher:
                 )
             )
             return False
+
         log.debug("connected, now uploading config")
         if not self.cfg.dry_deploy:
             netmiko.file_transfer(
@@ -71,10 +77,31 @@ class DeployDispatcher:
 
         log.debug("config uploaded, entering configuration mode")
         log.debug(netcon.config_mode())
+
         log.debug("applying config")
         if not self.cfg.dry_deploy:
             send_command(log, netcon, "load override /var/tmp/gpncfg-upload.cfg")
         send_command(log, netcon, "show | compare")
         if not self.cfg.dry_deploy:
             send_command(log, netcon, "commit confirmed 10", read_timeout=120)
-        log.info("config uploaded and commited with automatic rollback")
+        log.info("config uploaded and commited, now reconnecting to confirm")
+
+        log.debug("disconnecting")
+        netcon.disconnect()
+
+        netcon = self.connect_junos(device)
+        log.debug("sucessfuly reconnected")
+        if not netcon:
+            log.error(
+                "failed connecting to commit configuration, no more addresses to try"
+            )
+            return False
+
+        log.debug("device is still reachable, committing configuration")
+        netcon.config_mode()
+        if not self.cfg.dry_deploy:
+            send_command(log, netcon, "commit", read_timeout=120)
+
+        log.debug("all done, disconnecting")
+        netcon.disconnect()
+        log.info("config fully deployed")
