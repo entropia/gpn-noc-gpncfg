@@ -8,6 +8,7 @@ import gpncfg
 
 from ..config import ConfigProvider
 from ..data_provider import DataProvider
+from ..deployment import DeployDispatcher
 from ..fiddle import Fiddler
 from ..render import Renderer
 
@@ -66,3 +67,13 @@ class MainAction:
             with open(cwc.path, "w+") as file:
                 log.debug("writing config for serial " + serial)
                 print(cwc.config, file=file)
+
+        log.info("deploying configs")
+        dispatch = DeployDispatcher(self.cfg)
+        for serial, cwc in configs.items():
+            log.debug(
+                "connecting to device {name} at {addresses}".format(
+                    **cwc.context["device"]
+                )
+            )
+            dispatch.deploy_device(cwc)
