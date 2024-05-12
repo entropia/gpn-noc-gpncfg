@@ -69,6 +69,9 @@ class MainAction:
                 log.debug("writing config for serial " + serial)
                 print(cwc.config, file=file)
 
+        if self.cfg.no_deploy:
+            return
+
         log.info("deploying configs")
         dispatch = DeployDispatcher(self.cfg)
         with futures.ThreadPoolExecutor() as pool:

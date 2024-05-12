@@ -149,6 +149,12 @@ class ConfigProvider:
             help="authorization token for the nautobot apis. as a secret, it must not be provided on the cli",
         )
         parser.add_argument(
+            "--no-deploy",
+            action="store_true",
+            default=False,
+            help="only generate and write configs, do not deploy them to devices",
+        )
+        parser.add_argument(
             "--offline", help="run in offline mode", action="store_true"
         )
         parser.add_argument(
