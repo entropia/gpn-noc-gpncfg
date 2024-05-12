@@ -55,14 +55,15 @@ class Fiddler:
             )
             usecase = device["usecase"]
 
-            # log what we are doing
-            log.debug("fiddling config for serial {}'".format(device["serial"]))
-
             # add general stuff
             if (name := device["name"]) != None:
                 device["nodename"] = slugify(name)
             else:
                 device["nodename"] = "device-" + device["id"]
+
+            # log what we are doing
+            log = logging.getLogger(__name__).getChild(device["nodename"])
+            log.debug("fiddling config for serial {}'".format(device["serial"]))
 
             # use json to escape special characters
             device["motd"] = json.dumps(self.cfg.motd.format(timestamp=ts))
@@ -84,11 +85,7 @@ class Fiddler:
                 if addr := device.get(key):
                     device["addresses"].append(addr["host"])
 
-            log.debug(
-                "found management addreses {addresses} for device {name} ({serial})".format(
-                    **device
-                )
-            )
+            log.debug("found management addreses {addresses}".format(**device))
 
             # add data based on usecase
             if (
