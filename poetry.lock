@@ -511,6 +511,17 @@ test = ["certifi", "pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-co
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "dataclasses"
+version = "0.6"
+description = "A backport of the dataclasses module for Python 3.6"
+optional = false
+python-versions = "*"
+files = [
+    {file = "dataclasses-0.6-py3-none-any.whl", hash = "sha256:454a69d788c7fda44efd71e259be79577822f5e3f53f029a22d08004e951dc9f"},
+    {file = "dataclasses-0.6.tar.gz", hash = "sha256:6988bd2b895eef432d562370bb707d540f32f7360ab13da45340101bc2307d84"},
+]
+
+[[package]]
 name = "distlib"
 version = "0.3.8"
 description = "Distribution utilities"
@@ -1588,6 +1599,21 @@ files = [
 ]
 
 [[package]]
+name = "toml-dataclass"
+version = "0.1.0"
+description = "Interchangeable representation between toml and Python dataclass"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "toml-dataclass-0.1.0.tar.gz", hash = "sha256:64687a14e168c8b3100ed61589e0e1bd7d7f3bae0f7793053cd14e2876b0488a"},
+]
+
+[package.dependencies]
+dataclasses = "*"
+toml = "*"
+typing_extensions = "*"
+
+[[package]]
 name = "tomlkit"
 version = "0.12.4"
 description = "Style preserving TOML library"
@@ -1607,6 +1633,17 @@ python-versions = "*"
 files = [
     {file = "trove-classifiers-2024.3.3.tar.gz", hash = "sha256:df7edff9c67ff86b733628998330b180e81d125b1e096536d83ac0fd79673fdc"},
     {file = "trove_classifiers-2024.3.3-py3-none-any.whl", hash = "sha256:3a84096861b385ec422c79995d1f6435dde47a9b63adaa3c886e53232ba7e6e0"},
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.11.0"
+description = "Backported and Experimental Type Hints for Python 3.8+"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "typing_extensions-4.11.0-py3-none-any.whl", hash = "sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a"},
+    {file = "typing_extensions-4.11.0.tar.gz", hash = "sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0"},
 ]
 
 [[package]]
@@ -1840,4 +1877,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "fec359fc4bcbae859e1ea92c0df1b7bbb057dcbc29488ce5cc885f7bf2a82f0d"
+content-hash = "e012f8d3241e2fe13f01dc7be85da343b7207bfd19e36a5788d0ab089a4fb6bb"

@@ -4,9 +4,7 @@ import logging
 
 import colorlog
 
-from .data_provider import DataProvider
-from .generator import Generator
-from .main_action import MainAction, run
+from .main_action import run
 
 log = logging.getLogger(__name__)
 

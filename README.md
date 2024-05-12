@@ -12,8 +12,10 @@ GPN21 and Internetmanufaktur's [imfcfg](https://github.com/lub-dub/imfcfg)
 ### Directory Layout
 
 * `dev-env.sh` sets up the environment
-* `data` recommended user config for gpncfg
-  * `data/gpncfg.toml.example` recommended user config for gpncfg
+* `data` example config files
+  * `data/gpncfg.toml` per user settings and secrets for gpncfg
+  * `data/testuser2_*` ssh keys for testing configuration and deployment
+  * `data/login.toml` login file specifying root and user login data
 * `generated-configs` default output dir for generated device configs
 * `gpncfg` python module with gpncfg source code
   * `gpncfg/__init__.py` entry point for libraries
@@ -21,9 +23,10 @@ GPN21 and Internetmanufaktur's [imfcfg](https://github.com/lub-dub/imfcfg)
   * `gpncfg/config` config parsing which affects gpncfgs behavior
     * `gpncfg/config/event.toml` event specific configuration
   * `gpncfg/data_provider` information fetching from source of truth
-  * `gpncfg/generator` data juggling and templating logic
-    * `gpncfg/generator/templates` switch/router config templates
+  * `gpncfg/fiddle` modify the nautobot data to simplify the jinja2 templates
   * `gpncfg/main_action` driver and glue between other components
+  * `gpncfg/render` render the templates using the nautobot data
+    * `gpncfg/render/templates` switch/router config templates
 * `pyproject.toml` packaging and build definitions
 * `README.md` human readable project information
 
@@ -43,6 +46,9 @@ credentials, copy the example config file into your config directory and edit
 it:
 
 ``` bash
-cp ./data/gpncfg.toml.example $XDG_CONFIG_HOME/gpncfg.toml
-eval $EDITOR  $XDG_CONFIG_HOME/gpncfg.toml
+mkdir $XDG_CONFIG_HOME/gpncfg
+cp data/gpncfg.toml.example $XDG_CONFIG_HOME/gpncfg/gpncfg.toml
+eval $EDITOR  $XDG_CONFIG_HOME/gpncfg/gpncfg.toml
+# see data/login.toml for an example login file
+eval $EDITOR  $XDG_CONFIG_HOME/gpncfg/login.toml
 ```
