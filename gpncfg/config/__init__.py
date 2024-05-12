@@ -213,3 +213,12 @@ class ConfigProvider:
 
         with open(self.options.login_file, "r") as f:
             self.options.login = LoginInfo.read(f)
+
+        has_deploy_user = False
+        for user in self.options.login.user:
+            if user["name"] == self.options.deploy_user:
+                has_deploy_user = True
+                break
+
+        if not has_deploy_user:
+            log.warning("deploy user not found in users list")
