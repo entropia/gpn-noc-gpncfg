@@ -84,8 +84,8 @@ class Fiddler:
                 if addr := device.get(key):
                     device["addresses"].append(addr["host"])
 
-            log.info(
-                "determined primary addreses {addresses} for device {name} ({serial})".format(
+            log.debug(
+                "found management addreses {addresses} for device {name} ({serial})".format(
                     **device
                 )
             )
