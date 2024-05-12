@@ -137,14 +137,30 @@ class Fiddler:
 
                         device["physical_interfaces"].append(iface)
 
-            elif usecase == "switch_arista_sampelModel":
+            elif usecase == "router_juniper_mx204":
+                try:
+                    groups = device["bgp_routing_instances"][0]["peer_groups"]
+                except IndexError:
+                    groups = []
+
+                device["bgp_groups"] = dict()
+                for group in groups:
+                    name = slugify(group["name"])
+                    device["bgp_groups"][name] = group["endpoints"]
+
                 for iface in device["interfaces"]:
-                    tagged = [str(vlan["vid"]) for vlan in iface["tagged_vlans"]]
-                    if len(tagged) != 0:
-                        iface["tagged_vlans"] = ",".join(tagged)
-                    else:
-                        iface["tagged_vlans"] = "none"
-            elif usecase == "switch_arista_1234":
-                print("doing other stuff")
+                    iface["inet4"] = list()
+                    iface["inet6"] = list()
+                    for addr in iface["ip_addresses"]:
+                        if addr["ip_version"] == 4:
+                            iface["inet4"].append(addr)
+                        elif addr["ip_version"] == 6:
+                            iface["inet6"].append(addr)
+                        else:
+                            log.error(
+                                "encountered unknown ip family: {} on device {} serial '{}'".format(
+                                    addr["ip_version"], device["name"], device["serial"]
+                                )
+                            )
 
         return data
