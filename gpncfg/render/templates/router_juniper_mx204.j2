@@ -1,0 +1,191 @@
+system {
+    host-name "{{ device["nodename"] }}";
+    root-authentication {
+        encrypted-password "{{ config["login"]["root"]["sha512"] }}";
+    }
+    login {
+        message {{ device["motd"] }};
+        {% for user in config["login"]["user"] %}
+        user {{ user["name"] }} {
+            uid {{ user["uid"] }}
+            class super-user;
+            authentication {
+                {% for type in ["ed25519", "rsa"] %}
+                {% for key in user[type] %}
+                ssh-{{ type }} "{{ key }}"; ## SECRET-DATA
+                {% endfor %}
+                {% endfor %}
+            }
+        }
+        {% endfor %}
+
+    }
+    services {
+        ssh {
+            root-login deny;
+            no-password-authentication;
+        }
+    }
+    management-instance;
+}
+chassis {
+    fpc 0 {
+        pic 0 {
+            port 0 {
+                speed 100g;
+            }
+            port 1 {
+                speed 100g;
+            }
+            port 2 {
+                speed 100g;
+            }
+            port 3 {
+                speed 100g;
+            }
+        }
+        pic 1 {
+            number-of-ports 0;
+            power off;
+        }
+    }
+}
+interfaces {
+    {% for iface in device["interfaces"] %}
+    {{ iface["name"] }} {
+        unit 0 {
+        {% if iface["label"] %}
+            description {{ iface["label"] }};
+        {% endif %}
+        {% if iface["inet4"] %}
+            family inet {
+            {% for addr in iface["inet4"] %}
+                address {{ addr["address"] }};
+            {% endfor %}
+            }
+        {% endif %}
+        {% if iface["inet6"] %}
+            family inet6 {
+            {% for addr in iface["inet6"] %}
+                address {{ addr["address"] }};
+            {% endfor %}
+            }
+        {% endif %}
+        }
+    }
+    {% endfor %}
+}
+policy-options {
+    policy-statement ACCEPT-ALL {
+        term ACCEPT-ALL {
+            then accept;
+        }
+    }
+    policy-statement DENY-ALL {
+        term DENY-ALL {
+            then reject;
+        }
+    }
+    policy-statement ENTROPIA-EVENT-NET-v6-OUT {
+        term OWN {
+            from {
+                route-filter 2a0e:c5c1::/48 exact;
+            }
+            then accept;
+        }
+        term DENY-ALL {
+            then reject;
+        }
+    }
+}
+routing-instances {
+    mgmt_junos {
+        routing-options {
+            rib mgmt_junos.inet6.0 {
+                static {
+                    route ::/0 next-hop 2001:7c7:1803::1;
+                }
+            }
+        }
+    }
+    {# for vrf in device["vrfs"] %}
+    {{ vrf["name"] }} {
+        routing-options {
+            rib mgmt_junos.inet6.0 {
+                static {
+                    route ::/0 next-hop {{ vrf["prefixes"][0]["rel_gateway"]["host"] }};
+                }
+            }
+        }
+    }
+    {% endfor #}
+}
+routing-options {
+    rib inet6.0 {
+        static {
+            route 2a0e:c5c1::/48 discard;
+        }
+    }
+    rib inet.0;
+    #router-id {{ device["primary_ip4"]["host"] }};
+    router-id 45.140.181.0;
+    autonomous-system 215185;
+}
+protocols {
+    bgp {
+        group BGP-TOOLS-v6 {
+            neighbor 2a0c:2f07:9459::b12 {
+                description bgp.tools;
+                multihop {
+                    ttl 255;
+                }
+                local-address 2a0e:c5c1::;
+                mtu-discovery;
+                import DENY-ALL;
+                export ACCEPT-ALL;
+                peer-as 212232;
+            }
+        }
+        group TRANSIT-v6 {
+            description "inet6 peerings";
+            mtu-discovery;
+            enforce-first-as;
+            import ACCEPT-ALL;
+            family inet6 {
+                unicast {
+                    prefix-limit {
+                        maximum 200000;
+                    }
+                }
+            }
+            export ENTROPIA-EVENT-NET-v6-OUT;
+            {% for neighbor in device["bgp_groups"]["transit-6"] %}
+            neighbor {{ neighbor["peer"]["source_ip"]["host"] }} {
+                peer-as {{ neighbor["peer"]["autonomous_system"]["asn"] }};
+                description {{ neighbor["peer"]["autonomous_system"]["description"] }};
+                local-address {{ neighbor["source_ip"]["host"] }};
+            }
+            {% endfor %}
+        }
+        group TRANSIT-v4 {
+            description "inet4 peerings";
+            mtu-discovery;
+            enforce-first-as;
+            import ACCEPT-ALL;
+            family inet {
+                unicast {
+                    prefix-limit {
+                        maximum 1200000;
+                    }
+                }
+            }
+            {% for neighbor in device["bgp_groups"]["transit-4"] %}
+            neighbor {{ neighbor["peer"]["source_ip"]["host"] }} {
+                peer-as {{ neighbor["peer"]["autonomous_system"]["asn"] }};
+                description {{ neighbor["peer"]["autonomous_system"]["description"] }};
+                local-address {{ neighbor["source_ip"]["host"] }};
+            }
+            {% endfor %}
+        }
+    }
+}
