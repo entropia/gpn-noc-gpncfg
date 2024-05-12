@@ -61,8 +61,12 @@ class DataProvider:
                     }
                     interfaces {
                         name,
-                        ip_addresses { address },
+                        ip_addresses {
+                            address
+                            ip_version
+                        },
                         description,
+                        label,
                         id,
                         type,
                         mode,
@@ -70,6 +74,34 @@ class DataProvider:
                         untagged_vlan{name,vid},
                         _custom_field_data,
                     }
+                    vrfs {
+                      name
+                      prefixes {
+                        rel_gateway {
+                          host
+                        }
+                        network
+                      }
+                    }
+                    bgp_routing_instances {
+                      peer_groups {
+                        name
+                        endpoints {
+                          peer {
+                            autonomous_system {
+                              asn
+                              description
+                            }
+                            source_ip {
+                              host
+                            }
+                          }
+                          source_ip {
+                            host
+                          }
+                        }
+                      }
+                   }
                 },
                 vlans(
                     tenant:"%(tenant)s"
