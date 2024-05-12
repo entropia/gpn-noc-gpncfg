@@ -170,6 +170,11 @@ class ConfigProvider:
             help="only populate the cache, do not generate any configs",
         )
         parser.add_argument(
+            "--rollback-timeout",
+            help="number of minutes devices should wait for confirmation before rolling back their config",
+            required=True,
+        )
+        parser.add_argument(
             "--snmp-community",
             help="what snmp community the devices shall join. as a secret, it must not be provided on the cli",
             required=True,
