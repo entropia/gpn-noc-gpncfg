@@ -9,6 +9,7 @@ system {
         user {{ user["name"] }} {
             uid {{ user["uid"] }}
             class super-user;
+            {% if user["ecdsa"] or user["ed25519"] or user["rsa"] %}
             authentication {
                 {% for type in ["ecdsa", "ed25519", "rsa"] %}
                 {% for key in user[type] %}
@@ -16,6 +17,7 @@ system {
                 {% endfor %}
                 {% endfor %}
             }
+            {% endif %}
         }
         {% endfor %}
 
