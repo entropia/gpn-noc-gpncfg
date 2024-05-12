@@ -83,7 +83,12 @@ class DeployDispatcher:
             send_command(log, netcon, "load override /var/tmp/gpncfg-upload.cfg")
         send_command(log, netcon, "show | compare")
         if not self.cfg.dry_deploy:
-            send_command(log, netcon, "commit confirmed 10", read_timeout=120)
+            send_command(
+                log,
+                netcon,
+                "commit confirmed {}".format(self.cfg.rollback_timeout),
+                read_timeout=120,
+            )
         log.info("config uploaded and commited, now reconnecting to confirm")
 
         log.debug("disconnecting")
