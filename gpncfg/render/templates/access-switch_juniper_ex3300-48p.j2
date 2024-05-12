@@ -10,7 +10,7 @@ system {
             uid {{ user["uid"] }}
             class super-user;
             authentication {
-                {% for type in ["ed25519", "rsa"] %}
+                {% for type in ["ecdsa", "ed25519", "rsa"] %}
                 {% for key in user[type] %}
                 ssh-{{ type }} "{{ key }}";
                 {% endfor %}
