@@ -9,13 +9,15 @@ system {
         user {{ user["name"] }} {
             uid {{ user["uid"] }}
             class super-user;
+            {% if user["ecdsa"] or user["ed25519"] or user["rsa"] %}
             authentication {
-                {% for type in ["ed25519", "rsa"] %}
+                {% for type in ["ecdsa", "ed25519", "rsa"] %}
                 {% for key in user[type] %}
                 ssh-{{ type }} "{{ key }}";
                 {% endfor %}
                 {% endfor %}
             }
+            {% endif %}
         }
         {% endfor %}
 
