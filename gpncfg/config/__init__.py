@@ -102,6 +102,22 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--dry-deploy",
+            action="store_true",
+            default=False,
+            help="generate configs and connect to devices but do not commit configs",
+        )
+        parser.add_argument(
+            "--deploy-key",
+            help="path to a private ssh key file which is used to log in to switches to deploy configs",
+            required=True,
+        )
+        parser.add_argument(
+            "--deploy-user",
+            default="gpncfg",
+            help="what user to authenticate as when deploying configs",
+        )
+        parser.add_argument(
             "--gateway",
             help="the default gateway for all devices",
             required=True,
@@ -133,6 +149,12 @@ class ConfigProvider:
             help="authorization token for the nautobot apis. as a secret, it must not be provided on the cli",
         )
         parser.add_argument(
+            "--no-deploy",
+            action="store_true",
+            default=False,
+            help="only generate and write configs, do not deploy them to devices",
+        )
+        parser.add_argument(
             "--offline", help="run in offline mode", action="store_true"
         )
         parser.add_argument(
@@ -152,6 +174,11 @@ class ConfigProvider:
             action="store_true",
             default=False,
             help="only populate the cache, do not generate any configs",
+        )
+        parser.add_argument(
+            "--rollback-timeout",
+            help="number of minutes devices should wait for confirmation before rolling back their config",
+            required=True,
         )
         parser.add_argument(
             "--snmp-community",
@@ -187,7 +214,17 @@ class ConfigProvider:
         logging.getLogger("gpncfg").setLevel(self.options.log_level)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
+        self.options.deploy_key = os.path.expanduser(self.options.deploy_key)
         self.options.login_file = os.path.expanduser(self.options.login_file)
 
         with open(self.options.login_file, "r") as f:
             self.options.login = LoginInfo.read(f)
+
+        has_deploy_user = False
+        for user in self.options.login.user:
+            if user["name"] == self.options.deploy_user:
+                has_deploy_user = True
+                break
+
+        if not has_deploy_user:
+            log.warning("deploy user not found in users list")

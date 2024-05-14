@@ -18,6 +18,15 @@ def get_template_path():
     return epath
 
 
+class ConfigWithContext:
+    config: str
+    context: dict()
+
+    def __init__(self):
+        self.config = None
+        self.context = dict()
+
+
 class Renderer:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -45,15 +54,15 @@ class Renderer:
                     usecase=usecase,
                 )
             )
-
-            context = dict()
-            context["config"] = self.cfg.__dict__
-            context["vlans"] = data["vlans"]
-            context["device"] = device
+            cwc = ConfigWithContext()
+            cwc.context["config"] = self.cfg.__dict__
+            cwc.context["vlans"] = data["vlans"]
+            cwc.context["device"] = device
 
             try:
                 template = self.j2.get_template(usecase + ".j2")
-                configs[device["serial"]] = template.render(context)
+                cwc.config = template.render(cwc.context)
+                configs[device["serial"]] = cwc
             except jinja2.TemplateNotFound as e:
                 log.warn(
                     "failed to find template {} for device {}".format(
