@@ -1,20 +1,25 @@
 system {
     host-name "{{ device["nodename"] }}";
     root-authentication {
-        encrypted-password "$1$gpncfg$2ZPMT6Z7uAn1trvBjtWH81";
-        ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE1A2TIj0k6Y3kHMVO7PFpkpUG+RlPtJnFbWH7UcCL5T user0key0";
-        ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ+Edwwbpb2knMAjhzr6nEsCfR0BaF/E85np/2VVAi0f user0key1";
+        encrypted-password "{{ config["login"]["root"]["md5"] }}";
     }
     login {
         message {{ device["motd"] }};
-        user testuser0 {
-            uid 1000;
+        {% for user in config["login"]["user"] %}
+        user {{ user["name"] }} {
+            uid {{ user["uid"] }}
             class super-user;
+            {% if user["ecdsa"] or user["ed25519"] or user["rsa"] %}
             authentication {
-                ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE1A2TIj0k6Y3kHMVO7PFpkpUG+RlPtJnFbWH7UcCL5T user0key0";
-                ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ+Edwwbpb2knMAjhzr6nEsCfR0BaF/E85np/2VVAi0f user0key1";
+                {% for type in ["ecdsa", "ed25519", "rsa"] %}
+                {% for key in user[type] %}
+                ssh-{{ type }} "{{ key }}";
+                {% endfor %}
+                {% endfor %}
             }
+            {% endif %}
         }
+        {% endfor %}
 
     }
     services {

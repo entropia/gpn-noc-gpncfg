@@ -7,6 +7,7 @@ repos:
       - id: check-merge-conflict # checks for files that contain merge conflict strings.
       - id: check-yaml # checks yaml files for parseable syntax.
       - id: detect-private-key # detects the presence of private keys.
+        exclude: "data/testuser2*"
       - id: end-of-file-fixer # ensures that a file is either empty, or ends with one newline.
       - id: fix-byte-order-marker # removes utf-8 byte order marker.
       - id: mixed-line-ending # replaces or checks mixed line ending.
