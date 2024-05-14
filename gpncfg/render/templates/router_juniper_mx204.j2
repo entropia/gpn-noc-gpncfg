@@ -133,19 +133,6 @@ routing-options {
 }
 protocols {
     bgp {
-        group BGP-TOOLS-v6 {
-            neighbor 2a0c:2f07:9459::b12 {
-                description bgp.tools;
-                multihop {
-                    ttl 255;
-                }
-                local-address 2a0e:c5c1::;
-                mtu-discovery;
-                import DENY-ALL;
-                export ACCEPT-ALL;
-                peer-as 212232;
-            }
-        }
         group TRANSIT-v6 {
             description "inet6 peerings";
             mtu-discovery;
@@ -180,6 +167,22 @@ protocols {
                 }
             }
             {% for neighbor in device["bgp_groups"]["transit-4"] %}
+            neighbor {{ neighbor["peer"]["source_ip"]["host"] }} {
+                peer-as {{ neighbor["peer"]["autonomous_system"]["asn"] }};
+                description {{ neighbor["peer"]["autonomous_system"]["description"] }};
+                local-address {{ neighbor["source_ip"]["host"] }};
+            }
+            {% endfor %}
+        }
+        group BGP-TOOLS-v6 {
+            description bgp.tools;
+            multihop {
+                ttl 255;
+            }
+            mtu-discovery;
+            import DENY-ALL;
+            export ACCEPT-ALL;
+            {% for neighbor in device["bgp_groups"]["bgp.tools"] %}
             neighbor {{ neighbor["peer"]["source_ip"]["host"] }} {
                 peer-as {{ neighbor["peer"]["autonomous_system"]["asn"] }};
                 description {{ neighbor["peer"]["autonomous_system"]["description"] }};
