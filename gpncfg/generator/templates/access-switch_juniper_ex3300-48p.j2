@@ -1,0 +1,164 @@
+system {
+    host-name "{{ device["nodename"] }}";
+    root-authentication {
+        encrypted-password "$1$gpncfg$2ZPMT6Z7uAn1trvBjtWH81";
+        ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE1A2TIj0k6Y3kHMVO7PFpkpUG+RlPtJnFbWH7UcCL5T user0key0";
+        ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ+Edwwbpb2knMAjhzr6nEsCfR0BaF/E85np/2VVAi0f user0key1";
+    }
+    login {
+        message {{ device["motd"] }};
+        user testuser0 {
+            uid 1000;
+            class super-user;
+            authentication {
+                ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE1A2TIj0k6Y3kHMVO7PFpkpUG+RlPtJnFbWH7UcCL5T user0key0";
+                ssh-ed25519 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ+Edwwbpb2knMAjhzr6nEsCfR0BaF/E85np/2VVAi0f user0key1";
+            }
+        }
+
+    }
+    services {
+        ssh {
+            root-login deny;
+            no-tcp-forwarding;
+            protocol-version v2;
+            client-alive-count-max 5;
+            client-alive-interval 20;
+            fingerprint-hash sha2-256;
+        }
+        netconf {
+            ssh;
+        }
+    }
+    auto-snapshot;
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+}
+chassis {
+    alarm {
+        management-ethernet {
+            link-down ignore;
+        }
+    }
+
+}
+interfaces {
+    {% for iface in device["physical_interfaces"] %}
+    {{ iface["name"] }} {
+        unit 0 {
+            family ethernet-switching {
+            {% if iface["mode"] == "ACCESS" %}
+                port-mode access;
+                vlan {
+                    members {{ iface["untagged_vlan"]["name"] }};
+                }
+            {% elif iface["mode"] == "TAGGED" %}
+                port-mode trunk;
+                vlan {
+                    members {{ iface["tagged_vlans_text"] }};
+                }
+                native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
+            {% elif iface["mode"] == "TAGGED_ALL" %}
+                port-mode trunk;
+                vlan {
+                    members all;
+                }
+                native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
+            {% endif %}
+            }
+        }
+    }
+    {% endfor %}
+    vlan {
+        {% for iface in device["virtual_interfaces"] %}
+        unit {{ iface["untagged_vlan"]["vid"] }} {
+            family inet {
+            {% if iface["do_dhcp"] %}
+                dhcp;
+            {% else %}
+                {% for addr in iface["ip_addresses"] %}
+                address {{ addr["address"] }};
+                {% endfor %}
+            {% endif %}
+            }
+        }
+        {% endfor %}
+        unit 201 {
+            family inet {
+                address 10.152.32.100/24;
+            }
+        }
+        unit 202 {
+            family inet {
+                dhcp;
+            }
+        }
+    }
+}
+routing-options {
+    rib inet.0 {
+        {% if device["gateway"] %}
+        static {
+            route 0.0.0.0/0 next-hop {{ device["gateway"] }};
+        }
+        {% endif %}
+    }
+}
+protocols {
+    igmp-snooping {
+        vlan all;
+    }
+    rstp;
+    lldp {
+        interface all;
+    }
+    lldp-med {
+        interface all;
+    }
+}
+ethernet-switching-options {
+    secure-access-port {
+        {% for iface in device["physical_interfaces"] %}
+        interface {{ iface["name"] }}.0 {
+            {% if iface["_custom_field_data"]["trusted"] %}
+            dhcp-trusted;
+            {% else %}
+            no-dhcp-trusted;
+            {% endif %}
+        }
+        {% endfor %}
+    }
+    storm-control {
+        interface all;
+    }
+    bpdu-block {
+        {% for iface in device["physical_interfaces"] %}
+            {% if iface["_custom_field_data"]["trusted"] %}
+        # interface {{ iface["name"] }}.0;
+            {% else %}
+        interface {{ iface["name"] }}.0;
+            {% endif %}
+        {% endfor %}
+        disable-timeout 10;
+   }
+}
+vlans {
+{% for vlan in vlans %}
+    {{ vlan["name"] }} {
+        vlan-id {{ vlan["vid"] }};
+        {% if vlan["vid"] in device["vids"] %}
+        l3-interface vlan.{{ vlan["vid"] }};
+        {% endif %}
+    }
+{% endfor %}
+}
