@@ -12,12 +12,6 @@ import jinja2
 log = logging.getLogger(__name__)
 
 
-def get_template_path():
-    cur_dir = os.path.dirname(__file__)
-    epath = os.path.join(cur_dir, "templates")
-    return epath
-
-
 TRANS_SLUG = str.maketrans(" ", "-", "()")
 
 
@@ -25,35 +19,28 @@ def slugify(text):
     return text.lower().translate(TRANS_SLUG)
 
 
-class Generator:
-    def __init__(self, cfg, data):
-        self.configs = {}
-
+class Fiddler:
+    def __init__(self, cfg):
         self.cfg = cfg
-        self.data = data
 
-        self.j2 = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(searchpath=[get_template_path()]),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-
-    def fiddle(self):
+    def fiddle(self, data):
         log.info("fiddling data")
         ts = (
             datetime.datetime.utcnow()
             .replace(microsecond=0, tzinfo=datetime.timezone.utc)
             .isoformat()
         )
-        self.sanetize_vlans()
-        self.fiddle_devices(ts)
+        data = self.sanetize_vlans(data)
+        data = self.fiddle_devices(data, ts)
+        return data
 
-    def sanetize_vlans(self):
-        for vlan in self.data["vlans"]:
+    def sanetize_vlans(self, data):
+        for vlan in data["vlans"]:
             vlan["name"] = slugify(vlan["name"])
+        return data
 
-    def fiddle_devices(self, ts):
-        for device in self.data["devices"]:
+    def fiddle_devices(self, data, ts):
+        for device in data["devices"]:
             # set usecase and device id
             if device["serial"] == "":
                 device["serial"] = "fallback-serial-" + device["id"]
@@ -152,42 +139,4 @@ class Generator:
             elif usecase == "switch_arista_1234":
                 print("doing other stuff")
 
-    def generate(self):
-        log.info("generating configs")
-
-        missing_templates = []
-
-        for device in self.data["devices"]:
-            usecase = device["usecase"]
-
-            log.debug(
-                "generating config for serial {serial}".format(
-                    name=device["name"],
-                    serial=device["serial"],
-                    usecase=usecase,
-                )
-            )
-
-            context = dict()
-            context["config"] = self.cfg.__dict__
-            context["vlans"] = self.data["vlans"]
-            context["device"] = device
-
-            try:
-                template = self.j2.get_template(usecase + ".j2")
-                self.configs[device["serial"]] = template.render(context)
-            except jinja2.TemplateNotFound as e:
-                log.warn(
-                    "failed to find template {} for device {}".format(
-                        usecase, device["serial"]
-                    )
-                )
-                if not usecase in missing_templates:
-                    missing_templates.append(usecase)
-
-        if missing_templates != []:
-            log.error(
-                "failed to load templates for these usecases: {}".format(
-                    ", ".join(missing_templates)
-                )
-            )
+        return data
