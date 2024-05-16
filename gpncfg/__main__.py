@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
 
-from .main_action import MainAction
+from .main_action import run
 
-MainAction()
+run()

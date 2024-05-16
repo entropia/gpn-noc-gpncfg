@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 def run():
-    MainAction()
+    MainAction().run()
 
 
 class MainAction:
@@ -53,6 +53,15 @@ class MainAction:
 
         data = self.fiddler.fiddle(dp.data)
         return self.renderer.render(data)
+
+    def run(self):
+        if self.cfg.daemon:
+            self.run_daemon()
+        else:
+            self.run_once()
+
+    def run_daemon(self):
+        pass
 
     def run_once(self):
         configs = self.fetch_data()
