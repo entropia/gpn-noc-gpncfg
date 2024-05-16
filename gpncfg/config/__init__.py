@@ -102,6 +102,12 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--daemon",
+            action="store_true",
+            default=False,
+            help="continually fetch data from nautobot and deploy devices",
+        )
+        parser.add_argument(
             "--dry-deploy",
             action="store_true",
             default=False,
