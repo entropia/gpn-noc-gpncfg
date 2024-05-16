@@ -29,8 +29,13 @@ class MainAction:
         cfgp.assemble()
         self.cfg = cfgp.options
 
+        self.fiddler = Fiddler(self.cfg)
+        self.renderer = Renderer(self.cfg)
+        self.dispatch = DeployDispatcher(self.cfg)
+
         log.info("gpncfg greets gulli gulasch")
 
+    def fetch_data(self):
         os.makedirs(self.cfg.output_dir, exist_ok=True)
         assert os.access(
             self.cfg.output_dir, os.W_OK
@@ -38,23 +43,19 @@ class MainAction:
 
         dp = DataProvider(self.cfg)
 
-        if self.cfg.populate_cache:
-            if self.cfg.offline:
-                log.fatal("cannot populate cache in offline mode")
-                exit(1)
-            dp.fetch_nautobot()
-            return
-
         if self.cfg.offline:
             dp.fetch_cache()
         else:
             dp.fetch_nautobot()
 
-        fiddler = Fiddler(self.cfg)
-        data = fiddler.fiddle(dp.data)
+        if self.cfg.populate_cache:
+            return
 
-        renderer = Renderer(self.cfg)
-        configs = renderer.render(data)
+        data = self.fiddler.fiddle(dp.data)
+        return self.renderer.render(data)
+
+    def run_once(self):
+        configs = self.fetch_data()
 
         if not configs:
             log.info("no configs to write, exiting")
