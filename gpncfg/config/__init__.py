@@ -234,3 +234,7 @@ class ConfigProvider:
 
         if not has_deploy_user:
             log.warning("deploy user not found in users list")
+
+        if self.options.populate_cache and self.options.offline:
+            log.fatal("cannot populate cache in offline mode")
+            exit(1)
