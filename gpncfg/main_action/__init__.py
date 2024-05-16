@@ -57,7 +57,7 @@ class MainAction:
 
         dp = DataProvider(self.cfg)
 
-        if self.cfg.offline:
+        if self.cfg.use_cache:
             dp.fetch_cache()
         else:
             dp.fetch_nautobot()
@@ -155,7 +155,7 @@ class MainAction:
 
                     # in offline mode fetching data is very quick. take a moment
                     # to relax
-                    if self.cfg.offline:
+                    if self.cfg.use_cache:
                         time.sleep(10)
 
             except BaseException as e:
