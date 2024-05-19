@@ -135,7 +135,10 @@ class DataProvider:
 
     def fetch_cache(self):
         self.assert_cache_readable()
-        cache_file = self.get_latest_cache_path()
+        if self.cfg.use_cache_file:
+            cache_file = self.cfg.use_cache_file
+        else:
+            cache_file = self.get_latest_cache_path()
         log.info(f"fetching device information from cache at '{cache_file}'")
 
         if cache_file == None:

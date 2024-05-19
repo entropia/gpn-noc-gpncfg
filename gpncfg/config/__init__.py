@@ -189,6 +189,11 @@ class ConfigProvider:
             action="store_true",
             default=False,
         )
+        parser.add_argument(
+            "--use-cache-file",
+            help="do not fetch new data from nautobot and instead use this file as cache. implies --use-cache",
+            default=False,
+        )
 
         options = parser.parse_args()
 
@@ -227,6 +232,9 @@ class ConfigProvider:
 
         if not has_deploy_user:
             log.warning("deploy user not found in users list")
+
+        if self.options.use_cache_file:
+            self.options.use_cache = True
 
         if self.options.populate_cache and self.options.use_cache:
             log.fatal("cannot populate cache in offline mode")
