@@ -60,12 +60,14 @@ class DeployDriver:
         while True:
             # wait for new updates to come in. if there are multiple, ignore the latest
             self.log.debug("waiting for new config")
-            try:
-                cwc = self.queue.get(timeout=1)
-            except (TimeoutError, queue.Empty):
-                continue
-            finally:
-                self.honor_exit()
+            while True:
+                try:
+                    cwc = self.queue.get(timeout=1)
+                    break
+                except (TimeoutError, queue.Empty):
+                    pass
+                finally:
+                    self.honor_exit()
 
             # check if there are more up to date configs
             for i in range(sys.maxsize):
@@ -101,13 +103,11 @@ class DeployDriver:
 class DeployJunos(DeployDriver):
     def netcon_cmd(self, netcon, command, **kwargs):
         self.honor_exit()
-        self.log.debug(f"sending command `{command}`:")
-        self.log.debug(netcon.send_command(command, **kwargs))
+        netcon.send_command(command, **kwargs)
 
     def netcon_cfg_mode(self, netcon):
         self.honor_exit()
-        self.log.debug("entering configuration mode")
-        self.log.debug(netcon.config_mode())
+        netcon.config_mode()
 
     def connect_junos(self, device):
         self.honor_exit()
@@ -115,11 +115,19 @@ class DeployJunos(DeployDriver):
         for addr in device["addresses"]:
             try:
                 self.log.debug(f"attempting to connect to address {addr}")
+                session_log = None
+                if self.cfg.session_log_dir:
+                    os.makedirs(self.cfg.session_log_dir, exist_ok=True)
+                    session_log = os.path.join(
+                        self.cfg.session_log_dir, "{id}.txt".format(**device)
+                    )
                 return netmiko.ConnectHandler(
                     device_type="juniper_junos",
                     host=addr,
                     username=self.cfg.deploy_user,
                     key_file=self.cfg.deploy_key,
+                    session_log=session_log,
+                    session_log_file_mode="append",
                 )
             except netmiko.exceptions.NetmikoTimeoutException:
                 self.log.debug(
@@ -150,10 +158,9 @@ class DeployJunos(DeployDriver):
                 overwrite_file=True,
             )
 
-        self.log.debug("config uploaded, entering configuration mode")
-        self.log.debug(self.netcon_cfg_mode(netcon))
+        self.log.debug("config was successfuly uploaded, applying configuration")
+        self.netcon_cfg_mode(netcon)
 
-        self.log.debug("applying config")
         if not self.cfg.dry_deploy:
             self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload.cfg")
         self.netcon_cmd(netcon, "show | compare")
@@ -165,11 +172,9 @@ class DeployJunos(DeployDriver):
             )
         self.log.info("config uploaded and commited, now reconnecting to confirm")
 
-        self.log.debug("disconnecting")
         netcon.disconnect()
 
         netcon = self.connect_junos(device)
-        self.log.debug("sucessfuly reconnected")
         if not netcon:
             self.log.error(
                 "failed connecting to commit configuration, no more addresses to try"
