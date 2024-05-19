@@ -74,17 +74,17 @@ class DeployDriver:
                 try:
                     cwc = self.queue.get_nowait()
                 except queue.Empty:
-                    log.debug(f"skipped {i} outdated configs")
+                    self.log.debug(f"skipped {i} outdated configs")
                     break
 
-            log.debug(f"received new config: {cwc}")
+            self.log.debug(f"received new config: {cwc}")
 
             self.assert_prop(cwc.context["device"], "usecase")
             # assert self.usecase == cwc.context["device"]["usecase"]
             # assert self.id == cwc.context["device"]["id"]
 
             serial = cwc.context["device"]["serial"]
-            log.debug("writing config for serial " + serial)
+            self.log.debug("writing config for serial " + serial)
             cwc.path = os.path.abspath(
                 os.path.join(self.cfg.output_dir, "config-" + serial)
             )
@@ -92,7 +92,7 @@ class DeployDriver:
                 print(cwc.config, file=file)
 
             if self.cfg.no_deploy:
-                log.debug("as commanded, gpncfg shall not deploy to devices")
+                self.log.debug("as commanded, gpncfg shall not deploy to devices")
             else:
                 self.deploy(cwc)
 
