@@ -97,11 +97,6 @@ class ConfigProvider:
             # required=True,
         )
         parser.add_argument(
-            "--autoupdate-interval",
-            help="how frequently the devices try to update their configuration",
-            required=True,
-        )
-        parser.add_argument(
             "--daemon",
             action="store_true",
             default=False,
@@ -122,11 +117,6 @@ class ConfigProvider:
             "--deploy-user",
             default="gpncfg",
             help="what user to authenticate as when deploying configs",
-        )
-        parser.add_argument(
-            "--gateway",
-            help="the default gateway for all devices",
-            required=True,
         )
         parser.add_argument(
             "--login-file",
@@ -165,11 +155,6 @@ class ConfigProvider:
             "--output-dir",
             # default="./generated-configs",
             help="where to output the configs",
-            required=True,
-        )
-        parser.add_argument(
-            "--override-fan-speed",
-            help="the default fan speed of all the devices",
             required=True,
         )
         parser.add_argument(
