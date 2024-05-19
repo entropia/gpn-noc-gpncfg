@@ -1,10 +1,24 @@
 import asyncio
 import logging
+import os
+import queue
+import sys
 import time
 
 import netmiko
 
 log = logging.getLogger(__name__)
+
+
+def dispatch(usecase):
+    if (
+        usecase == "access-switch_juniper_ex3300-24p"
+        or usecase == "access-switch_juniper_ex3300-48p"
+    ):
+        return DeployJunos
+    else:
+        log.error(f"no deployment method for {usecase}")
+        return False
 
 
 # like SystemExit and asyncio.exceptions.CancelledError, inherit from
@@ -13,41 +27,78 @@ class ShutdownCommencing(BaseException):
     pass
 
 
-class DeployDispatcher:
-    def __init__(self, cfg, exit):
+class IntangibleDevice(Exception):
+    pass
+
+
+class DeployDriver:
+    def __init__(self, cfg, exit, queue, id):
         self.cfg = cfg
         self.exit = exit
-
-    def deploy_device(self, cwc):
-        device = cwc.context["device"]
-        usecase = device["usecase"]
-
-        log = logging.getLogger(__name__).getChild("deploy#{nodename}".format(**device))
-        log.debug("deploying device {name} ({serial})".format(**device))
-
-        if (
-            usecase == "access-switch_juniper_ex3300-24p"
-            or usecase == "access-switch_juniper_ex3300-48p"
-        ):
-            return DeployJunos(self.cfg, self.exit, log, cwc).deploy()
-        else:
-            self.log.error(f"no deploymen method for {usecase}")
-            return False
-
-
-class DeployJunos:
-    def __init__(self, cfg, exit, log, cwc):
-        self.cfg = cfg
-        self.exit = exit
-        self.log = log
-        self.cwc = cwc
-        self.device = cwc.context["device"]
+        self.queue = queue
+        self.id = id
+        self.usecase = None
+        self.log = logging.getLogger(__name__).getChild(f"worker#{id}")
 
     def honor_exit(self):
         if self.exit.is_set():
             self.log.debug("honoring shutdown request")
             raise ShutdownCommencing()
 
+    def assert_prop(self, device, name):
+        old = self.__getattribute__(name)
+        if not old:
+            return
+        new = device[name]
+        if new != old:
+            raise IntangibleDevice(
+                f"my {name} changed from '{old}' to '{new}', refusing to continue"
+            )
+
+    def worker_loop(self):
+        cwc = None
+        while True:
+            # wait for new updates to come in. if there are multiple, ignore the latest
+            self.log.debug("waiting for new config")
+            try:
+                cwc = self.queue.get(timeout=1)
+            except (TimeoutError, queue.Empty):
+                continue
+            finally:
+                self.honor_exit()
+
+            # check if there are more up to date configs
+            for i in range(sys.maxsize):
+                try:
+                    cwc = self.queue.get_nowait()
+                except queue.Empty:
+                    log.debug(f"skipped {i} outdated configs")
+                    break
+
+            log.debug(f"received new config: {cwc}")
+
+            self.assert_prop(cwc.context["device"], "usecase")
+            # assert self.usecase == cwc.context["device"]["usecase"]
+            # assert self.id == cwc.context["device"]["id"]
+
+            serial = cwc.context["device"]["serial"]
+            log.debug("writing config for serial " + serial)
+            cwc.path = os.path.abspath(
+                os.path.join(self.cfg.output_dir, "config-" + serial)
+            )
+            with open(cwc.path, "w+") as file:
+                print(cwc.config, file=file)
+
+            if self.cfg.no_deploy:
+                log.debug("as commanded, gpncfg shall not deploy to devices")
+            else:
+                self.deploy(cwc)
+
+            if not self.cfg.daemon:
+                return True
+
+
+class DeployJunos(DeployDriver):
     def netcon_cmd(self, netcon, command, **kwargs):
         self.honor_exit()
         self.log.debug(f"sending command `{command}`:")
@@ -58,10 +109,10 @@ class DeployJunos:
         self.log.debug("entering configuration mode")
         self.log.debug(netcon.config_mode())
 
-    def connect_junos(self):
+    def connect_junos(self, device):
         self.honor_exit()
 
-        for addr in self.device["addresses"]:
+        for addr in device["addresses"]:
             try:
                 self.log.debug(f"attempting to connect to address {addr}")
                 return netmiko.ConnectHandler(
@@ -76,14 +127,15 @@ class DeployJunos:
                 )
         return None
 
-    def deploy(self):
+    def deploy(self, cwc):
+        device = cwc.context["device"]
         self.log.debug("starting deployment")
 
-        netcon = self.connect_junos()
+        netcon = self.connect_junos(device)
         if not netcon:
             self.log.error(
                 "failed to deploy because addresses are unreachable {addresses}".format(
-                    **self.device
+                    **device
                 )
             )
             return False
@@ -93,7 +145,7 @@ class DeployJunos:
             self.honor_exit()
             netmiko.file_transfer(
                 netcon,
-                source_file=self.cwc.path,
+                source_file=cwc.path,
                 dest_file="gpncfg-upload.cfg",
                 overwrite_file=True,
             )
@@ -116,7 +168,7 @@ class DeployJunos:
         self.log.debug("disconnecting")
         netcon.disconnect()
 
-        netcon = self.connect_junos()
+        netcon = self.connect_junos(device)
         self.log.debug("sucessfuly reconnected")
         if not netcon:
             self.log.error(
