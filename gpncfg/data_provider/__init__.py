@@ -29,13 +29,18 @@ class DataProvider:
         # Create a GraphQL client using the defined transport
         client = gql.Client(transport=transport, fetch_schema_from_transport=True)
 
+        tenant = ""
+        if self.cfg.nautobot_tenant:
+            tenant = 'tenant:"{}"'.format(self.cfg.nautobot_tenant)
+
         # Provide a GraphQL query
         query = gql.gql(
             """
             query {
                 devices(
-                    status:"Active"
-                    tenant:"%(tenant)s"
+                    status__n: "Offline"
+                    role: ["access switch" "core switch" "Router"]
+                    %(tenant)s
                 ) {
                     name,
                     id,
@@ -72,16 +77,15 @@ class DataProvider:
                     }
                 },
                 vlans(
-                    tenant:"%(tenant)s"
+                    status:"Active"
+                    %(tenant)s
                 ) {
                     name,
                     vid
                 }
             }
             """
-            % {
-                "tenant": self.cfg.nautobot_tenant,
-            }
+            % {"tenant": tenant}
         )
 
         # Execute the query on the transport

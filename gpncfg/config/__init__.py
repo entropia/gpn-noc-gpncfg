@@ -143,8 +143,8 @@ class ConfigProvider:
         )
         parser.add_argument(
             "--nautobot-tenant",
+            default=False,
             help="only generate configs for devices assigned to this tenant. uses the nautobot name, not the id",
-            required=True,
         )
         parser.add_argument(
             "--nautobot-url", required=True, help="url to the nautobot instance"
