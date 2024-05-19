@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import threading
 import time
 
 import netmiko
@@ -14,38 +13,10 @@ class ShutdownCommencing(BaseException):
     pass
 
 
-def netcon_cmd(log, netcon, command, **kwargs):
-    DeployDispatcher.honor_exit(log)
-    log.debug(f"sending command `{command}`:")
-    log.debug(netcon.send_command(command, **kwargs))
-
-
-def netcon_cfg_mode(log, netcon):
-    DeployDispatcher.honor_exit(log)
-    log.debug("entering configuration mode")
-    # log.debug(netcon_cfg_mode(log, netcon))
-    log.debug(netcon.config_mode())
-
-
 class DeployDispatcher:
-    lock = threading.Event()
-
-    @classmethod
-    def shutdown(cls):
-        log.info(
-            "dispatcher received shutdown request, workers may take up to a minute to cleanly exit."
-        )
-        cls.lock.set()
-
-    @classmethod
-    def honor_exit(cls, log=None):
-        if cls.lock.is_set():
-            if log:
-                log.debug("honoring shutdown request")
-            raise ShutdownCommencing()
-
-    def __init__(self, cfg):
+    def __init__(self, cfg, exit):
         self.cfg = cfg
+        self.exit = exit
 
     def deploy_device(self, cwc):
         device = cwc.context["device"]
@@ -58,83 +29,106 @@ class DeployDispatcher:
             usecase == "access-switch_juniper_ex3300-24p"
             or usecase == "access-switch_juniper_ex3300-48p"
         ):
-            return self.deploy_junos(log, cwc)
+            return DeployJunos(self.cfg, self.exit, log, cwc).deploy()
         else:
-            log.error(f"no deploymen method for {usecase}")
+            self.log.error(f"no deploymen method for {usecase}")
             return False
 
-    def connect_junos(self, log, device):
-        DeployDispatcher.honor_exit(log)
 
-        for addr in device["addresses"]:
+class DeployJunos:
+    def __init__(self, cfg, exit, log, cwc):
+        self.cfg = cfg
+        self.exit = exit
+        self.log = log
+        self.cwc = cwc
+        self.device = cwc.context["device"]
+
+    def honor_exit(self):
+        if self.exit.is_set():
+            self.log.debug("honoring shutdown request")
+            raise ShutdownCommencing()
+
+    def netcon_cmd(self, netcon, command, **kwargs):
+        self.honor_exit()
+        self.log.debug(f"sending command `{command}`:")
+        self.log.debug(netcon.send_command(command, **kwargs))
+
+    def netcon_cfg_mode(self, netcon):
+        self.honor_exit()
+        self.log.debug("entering configuration mode")
+        self.log.debug(netcon.config_mode())
+
+    def connect_junos(self):
+        self.honor_exit()
+
+        for addr in self.device["addresses"]:
             try:
-                log.debug(f"attempting to connect to address {addr}")
+                self.log.debug(f"attempting to connect to address {addr}")
                 return netmiko.ConnectHandler(
                     device_type="juniper_junos",
-                    host=device["addresses"][0],
+                    host=addr,
                     username=self.cfg.deploy_user,
                     key_file=self.cfg.deploy_key,
                 )
             except netmiko.exceptions.NetmikoTimeoutException:
-                log.debug(f"failed to contact {addr}, trying next address if possible")
+                self.log.debug(
+                    f"failed to contact {addr}, trying next address if possible"
+                )
         return None
 
-    def deploy_junos(self, log, cwc):
-        device = cwc.context["device"]
+    def deploy(self):
+        self.log.debug("starting deployment")
 
-        log.debug("starting deployment")
-
-        netcon = self.connect_junos(log, device)
+        netcon = self.connect_junos()
         if not netcon:
-            log.error(
+            self.log.error(
                 "failed to deploy because addresses are unreachable {addresses}".format(
-                    **device
+                    **self.device
                 )
             )
             return False
 
-        log.debug("connected, now uploading config")
+        self.log.debug("connected, now uploading config")
         if not self.cfg.dry_deploy:
-            DeployDispatcher.honor_exit(log)
+            self.honor_exit()
             netmiko.file_transfer(
                 netcon,
-                source_file=cwc.path,
+                source_file=self.cwc.path,
                 dest_file="gpncfg-upload.cfg",
                 overwrite_file=True,
             )
 
-        log.debug("config uploaded, entering configuration mode")
-        log.debug(netcon_cfg_mode(log, netcon))
+        self.log.debug("config uploaded, entering configuration mode")
+        self.log.debug(self.netcon_cfg_mode(netcon))
 
-        log.debug("applying config")
+        self.log.debug("applying config")
         if not self.cfg.dry_deploy:
-            netcon_cmd(log, netcon, "load override /var/tmp/gpncfg-upload.cfg")
-        netcon_cmd(log, netcon, "show | compare")
+            self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload.cfg")
+        self.netcon_cmd(netcon, "show | compare")
         if not self.cfg.dry_deploy:
-            netcon_cmd(
-                log,
+            self.netcon_cmd(
                 netcon,
                 "commit confirmed {}".format(self.cfg.rollback_timeout),
                 read_timeout=120,
             )
-        log.info("config uploaded and commited, now reconnecting to confirm")
+        self.log.info("config uploaded and commited, now reconnecting to confirm")
 
-        log.debug("disconnecting")
+        self.log.debug("disconnecting")
         netcon.disconnect()
 
-        netcon = self.connect_junos(log, device)
-        log.debug("sucessfuly reconnected")
+        netcon = self.connect_junos()
+        self.log.debug("sucessfuly reconnected")
         if not netcon:
-            log.error(
+            self.log.error(
                 "failed connecting to commit configuration, no more addresses to try"
             )
             return False
 
-        log.debug("device is still reachable, committing configuration")
-        netcon_cfg_mode(log, netcon)
+        self.log.debug("device is still reachable, committing configuration")
+        self.netcon_cfg_mode(netcon)
         if not self.cfg.dry_deploy:
-            netcon_cmd(log, netcon, "commit", read_timeout=120)
+            self.netcon_cmd(netcon, "commit", read_timeout=120)
 
-        log.debug("all done, disconnecting")
+        self.log.debug("all done, disconnecting")
         netcon.disconnect()
-        log.info("config fully deployed")
+        self.log.info("config fully deployed")
