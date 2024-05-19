@@ -62,7 +62,7 @@ class Renderer:
             try:
                 template = self.j2.get_template(usecase + ".j2")
                 cwc.config = template.render(cwc.context)
-                configs[device["serial"]] = cwc
+                configs[device["id"]] = cwc
             except jinja2.TemplateNotFound as e:
                 log.warn(
                     "failed to find template {} for device {}".format(
