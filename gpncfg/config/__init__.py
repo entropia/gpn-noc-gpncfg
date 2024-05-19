@@ -184,6 +184,11 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--session-log-dir",
+            help="for deploy drivers that support this, write session logs to this directory",
+            default=False,
+        )
+        parser.add_argument(
             "--snmp-community",
             help="what snmp community the devices shall join. as a secret, it must not be provided on the cli",
             required=True,
