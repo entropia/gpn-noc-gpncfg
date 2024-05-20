@@ -27,7 +27,7 @@ class ShutdownCommencing(BaseException):
     pass
 
 
-class IntangibleDevice(Exception):
+class IntangibleDeviceError(Exception):
     pass
 
 
@@ -51,7 +51,7 @@ class DeployDriver:
             return
         new = device[name]
         if new != old:
-            raise IntangibleDevice(
+            raise IntangibleDeviceError(
                 f"my {name} changed from '{old}' to '{new}', refusing to continue"
             )
 
