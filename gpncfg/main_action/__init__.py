@@ -101,19 +101,27 @@ class MainAction:
 
                 # start worker routines for new devices
                 new = active - current
+                missing_usecases = set()
                 if new:
                     log.info(f"spawning workers for new devices {new}")
                 for id in new:
                     queues[id] = queue.Queue()
                     usecase = configs[id].context["device"]["usecase"]
-                    driver = deployment.dispatch(usecase)(
-                        self.cfg, self.exit, queues[id], id
+
+                    driver = deployment.DRIVERS.get(usecase)
+                    if driver:
+                        task = pool.submit(
+                            driver(self.cfg, self.exit, queues[id], id).worker_loop
+                        )
+                        task.id = id
+                        futs.add(task)
+                    else:
+                        missing_usecases.add(usecase)
+
+                if missing_usecases:
+                    log.error(
+                        f"unable to find deployment driver for {missing_usecases}"
                     )
-
-                    task = pool.submit(driver.worker_loop)
-
-                    task.id = id
-                    futs.add(task)
 
                 # shut down worker routines of devices that were relevant before
                 # but are not included in this update

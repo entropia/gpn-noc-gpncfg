@@ -10,17 +10,6 @@ import netmiko
 log = logging.getLogger(__name__)
 
 
-def dispatch(usecase):
-    if (
-        usecase == "access-switch_juniper_ex3300-24p"
-        or usecase == "access-switch_juniper_ex3300-48p"
-    ):
-        return DeployJunos
-    else:
-        log.error(f"no deployment method for {usecase}")
-        return False
-
-
 # like SystemExit and asyncio.exceptions.CancelledError, inherit from
 # BaseException. This way, the shutdown can not be confused with an error.
 class ShutdownCommencing(BaseException):
@@ -189,3 +178,9 @@ class DeployJunos(DeployDriver):
         self.log.debug("all done, disconnecting")
         netcon.disconnect()
         self.log.info("config fully deployed")
+
+
+DRIVERS = {
+    "access-switch_juniper_ex3300-24p": DeployJunos,
+    "access-switch_juniper_ex3300-48p": DeployJunos,
+}
