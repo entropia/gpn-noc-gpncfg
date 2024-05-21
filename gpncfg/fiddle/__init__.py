@@ -64,8 +64,7 @@ class Fiddler:
             else:
                 device["nodename"] = "device-" + device["id"]
 
-            # use json to escape special characters
-            device["motd"] = json.dumps(self.cfg.motd.format(timestamp=ts))
+            device["motd"] = self.cfg.motd.format(timestamp=ts)
 
             try:
                 device["gateway"] = device["primary_ip4"]["parent"]["rel_gateway"][
@@ -95,6 +94,9 @@ class Fiddler:
                 usecase == "access-switch_juniper_ex3300-24p"
                 or usecase == "access-switch_juniper_ex3300-48p"
             ):
+                # use json to escape special characters
+                device["motd"] = json.dumps(device["motd"])
+
                 # sort interfaces into physical and virtual ones as they are
                 # treated very differently.
                 device["physical_interfaces"] = list()
