@@ -59,18 +59,22 @@ class Renderer:
             cwc.context["vlans"] = data["vlans"]
             cwc.context["device"] = device
 
-            try:
-                template = self.j2.get_template(usecase + ".j2")
-                cwc.config = template.render(cwc.context)
-                configs[device["id"]] = cwc
-            except jinja2.TemplateNotFound as e:
-                log.warn(
-                    "failed to find template {} for device {}".format(
-                        usecase, device["serial"]
+            if usecase == "core-switch_mellanox_sn2410":
+                cwc.config = json.dumps(device["config"], indent=2, sort_keys=True)
+            else:
+                try:
+                    template = self.j2.get_template(usecase + ".j2")
+                    cwc.config = template.render(cwc.context)
+                except jinja2.TemplateNotFound as e:
+                    log.warn(
+                        "failed to find template {} for device {}".format(
+                            usecase, device["serial"]
+                        )
                     )
-                )
-                if not usecase in missing_templates:
-                    missing_templates.append(usecase)
+                    if not usecase in missing_templates:
+                        missing_templates.append(usecase)
+
+            configs[device["id"]] = cwc
 
         if missing_templates != []:
             log.error(
