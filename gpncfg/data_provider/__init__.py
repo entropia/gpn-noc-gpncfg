@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import os
+import time
 
 import gql
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -91,7 +92,15 @@ class DataProvider:
         )
 
         # Execute the query on the transport
-        result = client.execute(query)
+        pre = time.time()
+        try:
+            result = client.execute(query)
+        except BaseException as e:
+            log.error("graphql query failed", exc_info=e)
+            raise e
+        finally:
+            post = time.time()
+            log.debug("graphql query finished in {} seconds".format(post - pre))
 
         self.data = result
 
