@@ -180,7 +180,17 @@ class DeployJunos(DeployDriver):
         self.log.info("config fully deployed")
 
 
+class DeployCumuls(DeployDriver):
+    def deploy(self, cwc):
+        serial = cwc.context["device"]["serial"]
+        self.log.debug("writing config for serial " + serial)
+        cwc.path = os.path.abspath(
+            os.path.join(self.cfg.output_dir, "config-" + serial)
+        )
+
+
 DRIVERS = {
     "access-switch_juniper_ex3300-24p": DeployJunos,
     "access-switch_juniper_ex3300-48p": DeployJunos,
+    "core-switch_mellanox_sn2410": DeployCumuls,
 }
