@@ -29,13 +29,18 @@ class DataProvider:
         # Create a GraphQL client using the defined transport
         client = gql.Client(transport=transport, fetch_schema_from_transport=True)
 
+        tenant = ""
+        if self.cfg.nautobot_tenant:
+            tenant = 'tenant:"{}"'.format(self.cfg.nautobot_tenant)
+
         # Provide a GraphQL query
         query = gql.gql(
             """
             query {
                 devices(
-                    status:"Active"
-                    tenant:"%(tenant)s"
+                    status__n: "Offline"
+                    role: ["access switch" "core switch" "Router"]
+                    %(tenant)s
                 ) {
                     name,
                     id,
@@ -72,16 +77,15 @@ class DataProvider:
                     }
                 },
                 vlans(
-                    tenant:"%(tenant)s"
+                    status:"Active"
+                    %(tenant)s
                 ) {
                     name,
                     vid
                 }
             }
             """
-            % {
-                "tenant": self.cfg.nautobot_tenant,
-            }
+            % {"tenant": tenant}
         )
 
         # Execute the query on the transport
@@ -131,7 +135,10 @@ class DataProvider:
 
     def fetch_cache(self):
         self.assert_cache_readable()
-        cache_file = self.get_latest_cache_path()
+        if self.cfg.use_cache_file:
+            cache_file = self.cfg.use_cache_file
+        else:
+            cache_file = self.get_latest_cache_path()
         log.info(f"fetching device information from cache at '{cache_file}'")
 
         if cache_file == None:

@@ -97,11 +97,6 @@ class ConfigProvider:
             # required=True,
         )
         parser.add_argument(
-            "--autoupdate-interval",
-            help="how frequently the devices try to update their configuration",
-            required=True,
-        )
-        parser.add_argument(
             "--daemon",
             action="store_true",
             default=False,
@@ -124,11 +119,6 @@ class ConfigProvider:
             help="what user to authenticate as when deploying configs",
         )
         parser.add_argument(
-            "--gateway",
-            help="the default gateway for all devices",
-            required=True,
-        )
-        parser.add_argument(
             "--login-file",
             default=get_config_path("login.toml"),
             help="path to the login file, which contains the root passwords and the user definitions",
@@ -143,8 +133,8 @@ class ConfigProvider:
         )
         parser.add_argument(
             "--nautobot-tenant",
+            default=False,
             help="only generate configs for devices assigned to this tenant. uses the nautobot name, not the id",
-            required=True,
         )
         parser.add_argument(
             "--nautobot-url", required=True, help="url to the nautobot instance"
@@ -168,11 +158,6 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
-            "--override-fan-speed",
-            help="the default fan speed of all the devices",
-            required=True,
-        )
-        parser.add_argument(
             "--populate-cache",
             action="store_true",
             default=False,
@@ -182,6 +167,11 @@ class ConfigProvider:
             "--rollback-timeout",
             help="number of minutes devices should wait for confirmation before rolling back their config",
             required=True,
+        )
+        parser.add_argument(
+            "--session-log-dir",
+            help="for deploy drivers that support this, write session logs to this directory",
+            default=False,
         )
         parser.add_argument(
             "--snmp-community",
@@ -197,6 +187,11 @@ class ConfigProvider:
             "--use-cache",
             help="do not fetch new data from nautobot",
             action="store_true",
+            default=False,
+        )
+        parser.add_argument(
+            "--use-cache-file",
+            help="do not fetch new data from nautobot and instead use this file as cache. implies --use-cache",
             default=False,
         )
 
@@ -237,6 +232,9 @@ class ConfigProvider:
 
         if not has_deploy_user:
             log.warning("deploy user not found in users list")
+
+        if self.options.use_cache_file:
+            self.options.use_cache = True
 
         if self.options.populate_cache and self.options.use_cache:
             log.fatal("cannot populate cache in offline mode")

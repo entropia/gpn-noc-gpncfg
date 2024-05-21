@@ -1,6 +1,4 @@
 [gpncfg]
-autoupdate-interval = 30
-gateway = "94.45.227.1"
 motd = '''
  ^ ^   hooot hoooot
 (O,O)     from
@@ -13,8 +11,6 @@ changes, update them in the nautobot instead.
 
 this config was generated at {timestamp}
 '''
-nautobot-tenant = "Gulli Gulasch"
-override-fan-speed = 40
 output-dir = "./generated-configs"
 rollback-timeout = 3
 snmp-contact = "gpn-noc@lists.entropia.de"
