@@ -7,7 +7,7 @@ system {
         message {{ device["motd"] }};
         {% for user in config["login"]["user"] %}
         user {{ user["name"] }} {
-            uid {{ user["uid"] }}
+            uid {{ user["uid"] }};
             class super-user;
             {% if user["ecdsa"] or user["ed25519"] or user["rsa"] %}
             authentication {

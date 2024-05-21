@@ -2,14 +2,17 @@
 
 import logging
 import os
+import queue
+import threading
+import time
 from concurrent import futures
 from pprint import pprint as pp
 
 import gpncfg
 
+from .. import deployment
 from ..config import ConfigProvider
 from ..data_provider import DataProvider
-from ..deployment import DeployDispatcher
 from ..fiddle import Fiddler
 from ..render import Renderer
 
@@ -17,7 +20,22 @@ log = logging.getLogger(__name__)
 
 
 def run():
-    MainAction()
+    MainAction().run()
+
+
+def get_id_from_cwc(cwc):
+    return cwc.context["device"]["id"]
+
+
+def log_worker_result(task):
+    name = f"worker thread {task.id}"
+    if exc := task.exception(0):
+        if isinstance(exc, deployment.ShutdownCommencing):
+            log.debug(f"{name} finished early after receiving a shutdown request")
+        else:
+            log.error(f"{name} encountered an error", exc_info=exc)
+    else:
+        log.debug(f"{name} completed with result {task.result(0)}")
 
 
 class MainAction:
@@ -28,9 +46,14 @@ class MainAction:
         cfgp.collect()
         cfgp.assemble()
         self.cfg = cfgp.options
+        self.exit = threading.Event()
+
+        self.fiddler = Fiddler(self.cfg)
+        self.renderer = Renderer(self.cfg)
 
         log.info("gpncfg greets gulli gulasch")
 
+    def fetch_data(self):
         os.makedirs(self.cfg.output_dir, exist_ok=True)
         assert os.access(
             self.cfg.output_dir, os.W_OK
@@ -38,53 +61,138 @@ class MainAction:
 
         dp = DataProvider(self.cfg)
 
-        if self.cfg.populate_cache:
-            if self.cfg.offline:
-                log.fatal("cannot populate cache in offline mode")
-                exit(1)
-            dp.fetch_nautobot()
-            return
-
-        if self.cfg.offline:
+        if self.cfg.use_cache:
             dp.fetch_cache()
         else:
             dp.fetch_nautobot()
 
-        fiddler = Fiddler(self.cfg)
-        data = fiddler.fiddle(dp.data)
-
-        renderer = Renderer(self.cfg)
-        configs = renderer.render(data)
-
-        if not configs:
-            log.info("no configs to write, exiting")
+        if self.cfg.populate_cache:
             return
 
-        log.info("writing configs")
-        for serial, cwc in configs.items():
-            cwc.path = os.path.abspath(
-                os.path.join(self.cfg.output_dir, "config-" + serial)
+        data = self.fiddler.fiddle(dp.data)
+        return self.renderer.render(data)
+
+    def wait_for_workers(self, workers):
+        # wait for workers to finish and log their result
+        try:
+            for fut in futures.as_completed(futs):
+                log_worker_result(fut)
+        except (Exception, KeyboardInterrupt) as e:
+            log.fatal(
+                "main thread encountered error while trying to exit, force exiting now",
+                exc_info=e,
             )
-            with open(cwc.path, "w+") as file:
-                log.debug("writing config for serial " + serial)
-                print(cwc.config, file=file)
+            os._exit(1)
 
-        if self.cfg.no_deploy:
-            return
+    def run(self):
+        futs = set()
+        queues = dict()
+        pool = futures.ThreadPoolExecutor()
+        try:
+            while True:
+                # wait for new data from nautobot
+                configs = self.fetch_data()
 
-        log.info("deploying configs")
-        dispatch = DeployDispatcher(self.cfg)
-        with futures.ThreadPoolExecutor() as pool:
-            futs = list()
-            for serial, cwc in configs.items():
-                log.debug(
-                    "connecting to device {name} at {addresses}".format(
-                        **cwc.context["device"]
+                # create a set of device ids that we have threads for
+                current = set(fut.id for fut in futs)
+
+                # create a set of device ids that are supposed to be deployed
+                active = set(get_id_from_cwc(cwc) for cwc in configs.values())
+
+                # start worker routines for new devices
+                new = active - current
+                missing_usecases = set()
+                if new:
+                    log.info(f"spawning workers for new devices {new}")
+                for id in new:
+                    queues[id] = queue.Queue()
+                    usecase = configs[id].context["device"]["usecase"]
+
+                    driver = deployment.DRIVERS.get(usecase)
+                    if driver:
+                        task = pool.submit(
+                            driver(self.cfg, self.exit, queues[id], id).worker_loop
+                        )
+                        task.id = id
+                        futs.add(task)
+                    else:
+                        missing_usecases.add(usecase)
+
+                if missing_usecases:
+                    log.error(
+                        f"unable to find deployment driver for {missing_usecases}"
                     )
-                )
-                futs.append(pool.submit(dispatch.deploy_device, cwc))
 
-            for result in futures.as_completed(futs):
-                if exc := result.exception(0):
-                    log.error("thread raised exception", exc_info=exc)
-                log.debug("thread finished with result {}".format(result.result(0)))
+                # shut down worker routines of devices that were relevant before
+                # but are not included in this update
+                old = current - active
+                if old:
+                    log.debug(
+                        f"shutting down workers for no longer relevant devices: {old}"
+                    )
+                    for id in old:
+                        del queues[id]
+                        finished = futs.remove(id)
+
+                # send new configs to devices
+                for cwc in configs.values():
+                    queues[get_id_from_cwc(cwc)].put(cwc)
+
+                # handle finished or crashed threads
+                done, futs = futures.wait(futs, timeout=0)
+                for fut in done:
+                    del queues[fut.id]
+                    log_worker_result(fut)
+
+                # only loop in daemon mode
+                if not self.cfg.daemon:
+                    break
+
+                # in cache mode fetching data is very quick. take a moment
+                # to relax
+                if self.cfg.use_cache:
+                    time.sleep(10)
+
+            log.info(
+                "deployments are commencing. this ritual may take multiple minutes."
+            )
+            pool.shutdown(wait=False, cancel_futures=False)
+            # wait for workers to finish and log their result
+            for fut in futures.as_completed(futs):
+                log_worker_result(fut)
+        except (Exception, KeyboardInterrupt) as e:
+            try:
+                # log why the main thread was interrupted
+                if isinstance(e, Exception):
+                    log.fatal(
+                        "main thread encountered error",
+                        exc_info=e,
+                    )
+                else:
+                    log.info("received ^C, attempting clean shutdown.")
+
+                # tell worker threads to exit
+                pool.shutdown(wait=False, cancel_futures=True)
+                self.exit.set()
+
+                log.info(
+                    "waiting for worker threads to exit. this might take up to a minute"
+                )
+
+                # wait for workers to finish and log their result
+                for fut in futures.as_completed(futs):
+                    log_worker_result(fut)
+
+                log.info(
+                    "all workers exited cleanly. gpncfg knows it will join them soon"
+                )
+
+                # exit with non zero code if the main loop got interrupted by an error
+                if isinstance(e, Exception):
+                    exit(1)
+            except (Exception, KeyboardInterrupt) as e:
+                log.fatal(
+                    "main thread encountered error while trying to exit, force exiting now",
+                    exc_info=e,
+                )
+                os._exit(1)

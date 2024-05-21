@@ -102,6 +102,12 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--daemon",
+            action="store_true",
+            default=False,
+            help="continually fetch data from nautobot and deploy devices",
+        )
+        parser.add_argument(
             "--dry-deploy",
             action="store_true",
             default=False,
@@ -155,9 +161,6 @@ class ConfigProvider:
             help="only generate and write configs, do not deploy them to devices",
         )
         parser.add_argument(
-            "--offline", help="run in offline mode", action="store_true"
-        )
-        parser.add_argument(
             "-o",
             "--output-dir",
             # default="./generated-configs",
@@ -189,6 +192,12 @@ class ConfigProvider:
             "--snmp-contact",
             help="the snmp contact address of the devices",
             required=True,
+        )
+        parser.add_argument(
+            "--use-cache",
+            help="do not fetch new data from nautobot",
+            action="store_true",
+            default=False,
         )
 
         options = parser.parse_args()
@@ -228,3 +237,7 @@ class ConfigProvider:
 
         if not has_deploy_user:
             log.warning("deploy user not found in users list")
+
+        if self.options.populate_cache and self.options.use_cache:
+            log.fatal("cannot populate cache in offline mode")
+            exit(1)
