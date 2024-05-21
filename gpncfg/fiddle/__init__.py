@@ -14,6 +14,41 @@ log = logging.getLogger(__name__)
 
 TRANS_SLUG = str.maketrans(" ", "-", "()")
 
+CUMULUS_CONFIG = {
+    "bridge": {"domain": {"br_default": {"vlan": {}}}},
+    "interface": {},
+    "system": {
+        "aaa": {"user": {}},
+        "config": {
+            "auto-save": {"enable": "on"},
+            "snippet": {
+                "neighmgr": {
+                    "content": "[main]\nsetsrcipv4: 100.64.0.1\n",
+                    "file": "/etc/cumulus/neighmgr.conf",
+                    "services": {
+                        "neighmgr": {"action": "restart", "service": "neighmgrd"}
+                    },
+                }
+            },
+        },
+        "control-plane": {
+            "acl": {
+                "acl-default-dos": {"inbound": {}},
+                "acl-default-whitelist": {"inbound": {}},
+            }
+        },
+        "reboot": {"mode": "cold"},
+        "ssh-server": {},
+        "wjh": {
+            "channel": {"forwarding": {"trigger": {"l2": {}, "l3": {}, "tunnel": {}}}},
+            "enable": "on",
+        },
+    },
+    "vrf": {
+        "default": {"loopback": {"ip": {"address": {}}}},
+    },
+}
+
 
 def slugify(text):
     return text.lower().translate(TRANS_SLUG)
@@ -141,6 +176,99 @@ class Fiddler:
                             )
 
                         device["physical_interfaces"].append(iface)
+
+            elif usecase == "core-switch_mellanox_sn2410":
+                config = copy.deepcopy(CUMULUS_CONFIG)
+
+                config["system"]["hostname"] = device["nodename"]
+                config["system"]["message"] = {"pre-login": device["motd"]}
+
+                config["system"]["ssh-server"]["strict"] = "disabled"
+
+                ifaces = dict()
+                loips = dict()
+                vlans = set()
+                for iif in device["interfaces"]:
+                    oif = {}
+                    vlancfg = dict()
+                    vlans.update(vlan["vid"] for vlan in iif["tagged_vlans"])
+                    if vlan := iif["untagged_vlan"]:
+                        vlans.add(vlan["vid"])
+                        vlancfg["untagged"] = vlan["vid"]
+                    if iif["tagged_vlans"]:
+                        vlanstr = ",".join(
+                            str(vlan["vid"]) for vlan in iif["tagged_vlans"]
+                        )
+                        vlancfg["vlan"] = {vlanstr: dict()}
+
+                    if vlancfg and iif["type"] != "VIRTUAL":
+                        oif["bridge"] = {"domain": {"br_default": vlancfg}}
+
+                    if iaddrs := iif["ip_addresses"]:
+                        oif["ip"] = {"address": {}}
+                        if iif["_custom_field_data"]["dhcp_client"]:
+                            oif["ip"]["address"] = {"dhcp": {}}
+                        else:
+                            oaddrs = dict()
+                            ogateways = {4: [], 6: []}
+                            for addr in iaddrs:
+                                oaddrs[addr["address"]] = dict()
+                                try:
+                                    g = addr["parent"]["rel_gateway"]
+                                    ogateways[g["ip_version"]].append(g["host"])
+                                except TypeError:
+                                    pass
+
+                            if iif["_custom_field_data"]["set_gateway"]:
+                                for ver in ogateways.values():
+                                    if ver:
+                                        oif["ip"]["gateway"] = {ver[0]: {}}
+
+                            oif["ip"]["address"] = oaddrs
+
+                    if iif["type"] == "LAG":
+                        oif["type"] = "bond"
+                        obond = dict()
+                        for iface in iif["member_interfaces"]:
+                            obond[iface["name"]] = dict()
+                        oif["bond"] = {"member": obond, "mode": "lacp"}
+                    elif iif["type"] == "VIRTUAL":
+                        oif["type"] = "svi"
+                        if vlan := iif["untagged_vlan"]:
+                            oif["vlan"] = vlan["vid"]
+
+                    if iif["name"] == "lo":
+                        for addr in iif["ip_addresses"]:
+                            loips[addr["address"]] = dict()
+                        oif["type"] = "loopback"
+
+                    ifaces[slugify(iif["name"])] = oif
+
+                config["interface"] = ifaces
+                vlanstr = ",".join(str(vlan) for vlan in vlans)
+                config["bridge"]["domain"]["br_default"]["vlan"][vlanstr] = {}
+
+                ousers = dict()
+
+                for user in self.cfg.login.user:
+                    okeys = dict()
+                    for i, key in enumerate(
+                        user["ed25519"] + user["ecdsa"] + user["rsa"]
+                    ):
+                        parts = key.split(" ")
+                        okeys[user["name"] + str(i)] = {
+                            "type": parts[0],
+                            "key": parts[1],
+                        }
+                    ousers[user["name"]] = {
+                        "role": "system-admin",
+                        "ssh": {"authorized-key": okeys},
+                    }
+
+                config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
+
+                config["system"]["aaa"]["user"] = ousers
+                device["config"] = [{"set": config}]
 
             elif usecase == "switch_arista_sampelModel":
                 for iface in device["interfaces"]:
