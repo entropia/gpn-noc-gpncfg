@@ -27,7 +27,9 @@ class DataProvider:
         )
 
         # Create a GraphQL client using the defined transport
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
+        client = gql.Client(
+            transport=transport, fetch_schema_from_transport=True, execute_timeout=240
+        )
 
         tenant = ""
         if self.cfg.nautobot_tenant:
