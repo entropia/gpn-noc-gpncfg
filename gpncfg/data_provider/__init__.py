@@ -69,15 +69,60 @@ class DataProvider:
                     }
                     interfaces {
                         name,
-                        ip_addresses { address },
+                        ip_addresses {
+                          address
+                          host
+                          ip_version
+                          parent {
+                            rel_gateway {
+                              host
+                              ip_version
+                            }
+                          }
+                        },
                         description,
                         id,
                         type,
                         mode,
+                        member_interfaces { name },
                         tagged_vlans{name,vid},
                         untagged_vlan{name,vid},
                         _custom_field_data,
                     }
+                    bgp_routing_instances {
+                      autonomous_system {
+                        asn
+                      }
+                      endpoints {
+                        peer {
+                          autonomous_system {
+                            asn
+                            description
+                          }
+                          source_ip {
+                            ip_version
+                            host
+                          }
+                        }
+                      }
+                      peer_groups {
+                        name
+                        endpoints {
+                          peer {
+                            autonomous_system {
+                              asn
+                              description
+                            }
+                            source_ip {
+                              host
+                            }
+                          }
+                          source_ip {
+                            host
+                          }
+                        }
+                      }
+                   }
                 },
                 vlans(
                     status:"Active"
