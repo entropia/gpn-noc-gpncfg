@@ -150,7 +150,8 @@ class Fiddler:
                 config["system"]["hostname"] = device["nodename"]
                 config["system"]["message"] = {"pre-login": device["motd"]}
 
-                config["system"]["ssh-server"]["strict"] = "disabled"
+                if device["nodename"] == "cumulus-test":
+                    config["system"]["ssh-server"]["strict"] = "disabled"
 
                 ifaces = dict()
                 loips = dict()
