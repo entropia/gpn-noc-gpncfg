@@ -182,11 +182,9 @@ class DeployJunos(DeployDriver):
 
 class DeployCumuls(DeployDriver):
     def deploy(self, cwc):
-        serial = cwc.context["device"]["serial"]
-        self.log.debug("writing config for serial " + serial)
-        cwc.path = os.path.abspath(
-            os.path.join(self.cfg.output_dir, "config-" + serial)
-        )
+        name = "config-{nodename}".format(**cwc.context["device"])
+        self.log.debug("writing config for " + name)
+        cwc.path = os.path.abspath(os.path.join(self.cfg.output_dir, name))
 
 
 DRIVERS = {
