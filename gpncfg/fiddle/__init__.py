@@ -210,9 +210,7 @@ class Fiddler:
                         for addr in iif["ip_addresses"]:
                             loips[addr["address"]] = dict()
                             if addr["ip_version"] == 4:
-                                config["system"]["router"]["bgp"]["router-id"] = addr[
-                                    "host"
-                                ]
+                                config["router"]["bgp"]["router-id"] = addr["host"]
                         oif["type"] = "loopback"
 
                     for tag in iif["tags"]:
@@ -246,7 +244,7 @@ class Fiddler:
                     }
 
                 for routing in device["bgp_routing_instances"]:
-                    config["system"]["router"]["bgp"]["autonomous-system"] = routing[
+                    config["router"]["bgp"]["autonomous-system"] = routing[
                         "autonomous_system"
                     ]["asn"]
                     for endpoint in routing["endpoints"]:
