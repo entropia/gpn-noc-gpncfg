@@ -29,8 +29,87 @@ CUMULUS_CONFIG = {
             "channel": {"forwarding": {"trigger": {"l2": {}, "l3": {}, "tunnel": {}}}},
             "enable": "on",
         },
+        "router": {
+            "bgp": {
+                "enable": "enabled",
+            },
+            "policy": {
+                "prefix-list": {
+                    "EVENTNET4": {
+                        "rule": {
+                            "10": {
+                                "action": "permit",
+                                "match": {
+                                    "151.216.64.0/19": {
+                                        "max-prefix-len": 32,
+                                        "min-prefix-len": 20,
+                                    }
+                                },
+                            }
+                        },
+                        "type": "ipv4",
+                    },
+                    "EVENTNET6": {
+                        "rule": {
+                            "10": {
+                                "action": "permit",
+                                "match": {
+                                    "2a0e:c5c1::/48": {
+                                        "max-prefix-len": 128,
+                                        "min-prefix-len": 49,
+                                    }
+                                },
+                            }
+                        },
+                        "type": "ipv6",
+                    },
+                },
+                "route-map": {
+                    "EVENTNET": {
+                        "rule": {
+                            "10": {
+                                "action": {"permit": {}},
+                                "match": {
+                                    "ip-prefix-list": "EVENTNET4",
+                                    "type": "ipv4",
+                                },
+                            },
+                            "11": {
+                                "action": {"permit": {}},
+                                "match": {
+                                    "ip-prefix-list": "EVENTNET6",
+                                    "type": "ipv6",
+                                },
+                            },
+                        }
+                    }
+                },
+            },
+        },
     },
     "vrf": {
-        "default": {"loopback": {"ip": {"address": {}}}},
+        "default": {
+            "loopback": {"ip": {"address": {}}},
+            "router": {
+                "bgp": {
+                    "address-family": {
+                        "ipv4-unicast": {
+                            "enable": "on",
+                            "redistribute": {
+                                "connected": {"enable": "on", "route-map": "EVENTNET"}
+                            },
+                        },
+                        "ipv6-unicast": {
+                            "enable": "on",
+                            "redistribute": {
+                                "connected": {"enable": "on", "route-map": "EVENTNET"}
+                            },
+                        },
+                    },
+                    "enable": "on",
+                    "neighbor": {},
+                },
+            },
+        },
     },
 }

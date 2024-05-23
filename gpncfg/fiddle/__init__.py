@@ -208,13 +208,20 @@ class Fiddler:
                     if iif["name"] == "lo":
                         for addr in iif["ip_addresses"]:
                             loips[addr["address"]] = dict()
+                            if addr["ip_version"] == 4:
+                                config["system"]["router"]["bgp"]["router-id"] = addr[
+                                    "host"
+                                ]
                         oif["type"] = "loopback"
 
                     ifaces[slugify(iif["name"])] = oif
 
                 config["interface"] = ifaces
-                vlanstr = ",".join(str(vlan) for vlan in vlans)
-                config["bridge"]["domain"]["br_default"]["vlan"][vlanstr] = {}
+                if vlans:
+                    vlanstr = ",".join(str(vlan) for vlan in vlans)
+                    config["bridge"]["domain"]["br_default"]["vlan"][vlanstr] = {}
+                else:
+                    del config["bridge"]
 
                 ousers = dict()
 
@@ -232,6 +239,29 @@ class Fiddler:
                         "role": "system-admin",
                         "ssh": {"authorized-key": okeys},
                     }
+
+                oneigh = dict()
+                if bgp_instances := device["bgp_routing_instances"]:
+                    for routing in bgp_instances:
+                        config["system"]["router"]["bgp"]["autonomous-system"] = (
+                            routing["autonomous_system"]["asn"]
+                        )
+                        for endpoint in routing["endpoints"]:
+                            peer = endpoint["peer"]
+                            pprint(peer)
+                            oneigh[peer["source_ip"]["host"]] = {
+                                "address-family": {
+                                    "ipv{}-unicast".format(
+                                        peer["source_ip"]["ip_version"]
+                                    ): {"enable": "on"}
+                                },
+                                "remote-as": peer["autonomous_system"]["asn"],
+                                "type": "numbered",
+                            }
+                    config["vrf"]["default"]["router"]["bgp"]["neighbor"] = oneigh
+                else:
+                    log.error("deleting routing instance")
+                    del config["vrf"]["default"]["router"]
 
                 config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
