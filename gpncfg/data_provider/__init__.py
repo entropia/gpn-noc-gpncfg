@@ -69,6 +69,9 @@ class DataProvider:
                     }
                     interfaces {
                         name,
+                        tags {
+                            name
+                        }
                         ip_addresses {
                           address
                           host
