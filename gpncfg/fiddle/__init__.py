@@ -9,7 +9,7 @@ from pprint import pprint
 
 import jinja2
 
-from .cumulus import CUMULUS_CONFIG
+from .cumulus import CUMULUS_CONFIG, UNNUMBERED_BGP
 
 log = logging.getLogger(__name__)
 
@@ -154,6 +154,7 @@ class Fiddler:
                     config["system"]["ssh-server"]["strict"] = "disabled"
 
                 ifaces = dict()
+                oneigh = dict()
                 loips = dict()
                 vlans = set()
                 for iif in device["interfaces"]:
@@ -214,6 +215,10 @@ class Fiddler:
                                 ]
                         oif["type"] = "loopback"
 
+                    for tag in iif["tags"]:
+                        if tag["name"] == "unnumbered bgp":
+                            oneigh[iif["name"]] = UNNUMBERED_BGP
+
                     ifaces[slugify(iif["name"])] = oif
 
                 config["interface"] = ifaces
@@ -240,26 +245,23 @@ class Fiddler:
                         "ssh": {"authorized-key": okeys},
                     }
 
-                oneigh = dict()
-                if bgp_instances := device["bgp_routing_instances"]:
-                    for routing in bgp_instances:
-                        config["system"]["router"]["bgp"]["autonomous-system"] = (
-                            routing["autonomous_system"]["asn"]
-                        )
-                        for endpoint in routing["endpoints"]:
-                            peer = endpoint["peer"]
-                            pprint(peer)
-                            oneigh[peer["source_ip"]["host"]] = {
-                                "address-family": {
-                                    "ipv{}-unicast".format(
-                                        peer["source_ip"]["ip_version"]
-                                    ): {"enable": "on"}
-                                },
-                                "remote-as": peer["autonomous_system"]["asn"],
-                                "type": "numbered",
-                            }
-                    config["vrf"]["default"]["router"]["bgp"]["neighbor"] = oneigh
-                else:
+                for routing in device["bgp_routing_instances"]:
+                    config["system"]["router"]["bgp"]["autonomous-system"] = routing[
+                        "autonomous_system"
+                    ]["asn"]
+                    for endpoint in routing["endpoints"]:
+                        peer = endpoint["peer"]
+                        oneigh[peer["source_ip"]["host"]] = {
+                            "address-family": {
+                                "ipv{}-unicast".format(
+                                    peer["source_ip"]["ip_version"]
+                                ): {"enable": "on"}
+                            },
+                            "remote-as": peer["autonomous_system"]["asn"],
+                            "type": "numbered",
+                        }
+                config["vrf"]["default"]["router"]["bgp"]["neighbor"] = oneigh
+                if not oneigh:
                     log.error("deleting routing instance")
                     del config["vrf"]["default"]["router"]
 

@@ -113,3 +113,12 @@ CUMULUS_CONFIG = {
         },
     },
 }
+
+UNNUMBERED_BGP = {
+    "address-family": {
+        "ipv4-unicast": {"enable": "on"},
+        "ipv6-unicast": {"enable": "on"},
+    },
+    "remote-as": "external",
+    "type": "unnumbered",
+}
