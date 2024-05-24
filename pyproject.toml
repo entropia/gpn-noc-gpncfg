@@ -14,6 +14,7 @@ gql = "^3.5.0"
 jinja2 = "^3.1.3"
 netmiko = "^4.3.0"
 python = "^3.11"
+requests = "^2.32.2"
 toml = "^0.10.2"
 toml-dataclass = "^0.1.0"
 
