@@ -93,7 +93,7 @@ class Fiddler:
 
             # add data based on usecase
             if (
-                usecase == "access-switch_juniper_ex3300-24p"
+                usecase == "access-switch_juniper_ex3300-24t"
                 or usecase == "access-switch_juniper_ex3300-48p"
             ):
                 # use json to escape special characters
