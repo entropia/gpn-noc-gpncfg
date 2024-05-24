@@ -73,11 +73,12 @@ class Fiddler:
                     "host"
                 ]
             except TypeError as e:
-                log.warn(
-                    "device has no gateway (name '{}' serial '{}')".format(
-                        device["name"], device["serial"]
+                if device["role"]["name"] == "access":
+                    log.warn(
+                        "access device has no gateway {nodename} {serial})".format(
+                            **device
+                        )
                     )
-                )
                 device["gateway"] = None
 
             device["addresses"] = list()
