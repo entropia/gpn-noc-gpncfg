@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import os
+import time
 
 import gql
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -27,7 +28,9 @@ class DataProvider:
         )
 
         # Create a GraphQL client using the defined transport
-        client = gql.Client(transport=transport, fetch_schema_from_transport=True)
+        client = gql.Client(
+            transport=transport, fetch_schema_from_transport=True, execute_timeout=240
+        )
 
         tenant = ""
         if self.cfg.nautobot_tenant:
@@ -89,7 +92,15 @@ class DataProvider:
         )
 
         # Execute the query on the transport
-        result = client.execute(query)
+        pre = time.time()
+        try:
+            result = client.execute(query)
+        except BaseException as e:
+            log.error("graphql query failed", exc_info=e)
+            raise e
+        finally:
+            post = time.time()
+            log.debug("graphql query finished in {} seconds".format(post - pre))
 
         self.data = result
 
