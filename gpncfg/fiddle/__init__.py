@@ -261,8 +261,11 @@ class Fiddler:
                         }
                 config["vrf"]["default"]["router"]["bgp"]["neighbor"] = oneigh
                 if not oneigh:
-                    log.error("deleting routing instance")
-                    del config["vrf"]["default"]["router"]
+                    log.warning(
+                        "routing instance has no neighbors {nodename} {serial}".format(
+                            **device
+                        )
+                    )
 
                 config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
