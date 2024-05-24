@@ -143,7 +143,7 @@ class DataProvider:
         pre = time.time()
         try:
             result = client.execute(query)
-        except BaseException as e:
+        except Exception as e:
             log.error("graphql query failed", exc_info=e)
             raise e
         finally:
