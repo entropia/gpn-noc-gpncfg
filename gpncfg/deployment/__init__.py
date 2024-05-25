@@ -242,6 +242,24 @@ class DeployJunos(DeployDriver):
                 )
         return None
 
+    def is_change_more_than_motd(self, netcon):
+        self.log.debug("getting configuration diff")
+        res = self.netcon_cmd(netcon, "show | compare")
+        lines = res.splitlines()
+        if len(lines) < 3:
+            return False
+
+        if lines[0] == "[edit]" and lines[1].startswith("- version "):
+            lines.pop(0)
+            lines.pop(0)
+
+        return not (
+            len(lines) == 3
+            and lines[0] == "[edit system login]"
+            and lines[1].startswith("-   message ")
+            and lines[2].startswith("+   message ")
+        )
+
     def deploy(self, cwc):
         device = cwc.context["device"]
         self.log.debug("starting deployment")
@@ -270,7 +288,22 @@ class DeployJunos(DeployDriver):
 
         if not self.cfg.dry_deploy:
             self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload.cfg")
-        self.netcon_cmd(netcon, "show | compare")
+
+        if self.is_change_more_than_motd(netcon):
+            self.log.debug(
+                "pursuing change that affects more than the motd on {nodename}".format(
+                    **device
+                )
+            )
+        else:
+            self.log.debug(
+                "not pursuing change that only updates motd on {nodename}".format(
+                    **device
+                )
+            )
+            self.netcon_cmd(netcon, "rollback 0")
+            return True
+
         if not self.cfg.dry_deploy:
             self.netcon_cmd(
                 netcon,
