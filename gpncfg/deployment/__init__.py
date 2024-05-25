@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import logging
 import os
@@ -345,7 +346,7 @@ class DeployCumuls(DeployDriver):
             ),
         )
 
-    def get_diff(self, base, session, rev):
+    def get_diff(self, base, session, rev, name):
         self.honor_exit()
         self.log.debug(f"getting diff between 'applied' and '{rev}'")
         res = session.get(f"{base}/", params={"rev": "applied", "diff": rev})
