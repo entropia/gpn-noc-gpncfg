@@ -18,12 +18,6 @@ CUMULUS_CONFIG = {
                 }
             },
         },
-        "control-plane": {
-            "acl": {
-                "acl-default-dos": {"inbound": {}},
-                "acl-default-whitelist": {"inbound": {}},
-            }
-        },
         "reboot": {"mode": "cold"},
         "ssh-server": {},
         "wjh": {
