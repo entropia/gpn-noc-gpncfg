@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from dataclasses import dataclass
+from pprint import pprint
 
 import configargparse
 import toml
@@ -24,6 +25,7 @@ class RootInfo(TomlDataClassIO):
 class UserInfo(TomlDataClassIO):
     uid: int
     name: str
+    password: str
     ecdsa: [str]
     ed25519: [str]
     rsa: [str]
