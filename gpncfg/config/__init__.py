@@ -126,6 +126,11 @@ class ConfigProvider:
             help="what user to authenticate as when deploying configs",
         )
         parser.add_argument(
+            "--limit",
+            default=[],
+            help="comma separated list of nautobot device ids. deploy workers are started only for those devices.",
+        )
+        parser.add_argument(
             "--login-file",
             default=get_config_path("login.toml"),
             help="path to the login file, which contains the root passwords and the user definitions",
@@ -259,3 +264,6 @@ class ConfigProvider:
         if self.options.populate_cache and self.options.use_cache:
             log.fatal("cannot populate cache in offline mode")
             exit(1)
+
+        if isinstance(self.options.limit, str):
+            self.options.limit = self.options.limit.split(",")
