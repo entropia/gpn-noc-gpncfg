@@ -25,6 +25,18 @@ CUMULUS_CONFIG = {
             "enable": "on",
         },
     },
+    "service": {
+        "dns": {
+            "default": {
+                "server": {
+                    # https://libreops.cc/radicaldns.html server 1
+                    "2a01:4f8:1c0c:82c0::1": {},
+                    # https://libreops.cc/radicaldns.html server 2
+                    "2a03:f80:30:192:71:166:92:1": {},
+                }
+            }
+        }
+    },
     "router": {
         "bgp": {
             "enable": "on",
