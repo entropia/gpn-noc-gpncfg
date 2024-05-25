@@ -267,7 +267,7 @@ class DeployJunos(DeployDriver):
         netcon = self.connect_junos(device)
         if not netcon:
             self.log.error(
-                "failed to deploy because addresses are unreachable {addresses}".format(
+                "failed to establish connection over any address of {addresses}".format(
                     **device
                 )
             )
