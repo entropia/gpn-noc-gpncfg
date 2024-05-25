@@ -45,6 +45,9 @@ NT_VALID = {
     "readying",
     "reloaded",
     "reloading",
+    "save",
+    "saving",
+    "saved",
     "verified",
     "verify_error",
     "verifying",
@@ -108,6 +111,14 @@ NT_BLOCKING = {
     "reloading",
     "verify_error",
     "verifying",
+}
+# nvue states that indicate a revision is being saved to the startup config
+NT_SAVING = {
+    "saving",
+}
+# nvue states that indicate a revision has been saved to the startup config
+NT_SAVED = {
+    "saved",
 }
 
 
@@ -292,7 +303,7 @@ class DeployCumuls(DeployDriver):
         super().__init__(*args, **kwargs)
         self.timeout = int(self.cfg.rollback_timeout) * 60
 
-    def wait_for_state(self, session, url, good, target, timeout=60):
+    def wait_for_state(self, session, base, rev, good, target, timeout=60):
         self.log.debug(
             f"waiting {timeout} seconds for revision to change to state {target} or to stop being {good}"
         )
@@ -301,7 +312,7 @@ class DeployCumuls(DeployDriver):
         start = time.time()
         while True:
             try:
-                res = session.get(url)
+                res = session.get(f"{base}/revision/{rev}")
                 state = res.json()["state"]
                 self.log.debug(f"received {res} ({state})")
                 if state not in NT_VALID:
@@ -389,6 +400,18 @@ class DeployCumuls(DeployDriver):
             ),
         )
 
+    def save_to_startup(self, base, session, rev):
+        self.honor_exit()
+        self.log.debug(f"saving revision {rev} to startup config")
+        session.patch(
+            f"{base}/revision/{rev}",
+            data=json.dumps(
+                {
+                    "state": "save",
+                }
+            ),
+        )
+
     def is_ready(self, base, session):
         self.honor_exit()
         res = session.get(f"{base}/revision")
@@ -452,7 +475,7 @@ class DeployCumuls(DeployDriver):
             self.honor_exit()
             session.patch(f"{base}/", data=json.dumps(device["config"]), params=params)
 
-            diff = self.get_diff(base, session, rev)
+            diff = self.get_diff(base, session, rev, device["nodename"])
             try:
                 if (
                     diff.keys() == {"system"}
@@ -487,7 +510,8 @@ class DeployCumuls(DeployDriver):
                 # is already being commited
                 self.wait_for_state(
                     session,
-                    f"{base}/revision/{rev}",
+                    base,
+                    rev,
                     good=NT_WAIT_FOR_TURN,
                     target={},
                     timeout=10,
@@ -500,20 +524,20 @@ class DeployCumuls(DeployDriver):
                     )
                     self.wait_for_state(
                         session,
-                        f"{base}/revision/{rev}",
+                        base,
+                        rev,
                         good=NT_WAIT_FOR_TURN,
                         target={},
                         timeout=None,
                     )
 
                 self.log.debug("waiting for revision to be checked and verified")
-                self.wait_for_state(
-                    session, f"{base}/revision/{rev}", good=NT_PREPROCESS, target={}
-                )
+                self.wait_for_state(session, base, rev, good=NT_PREPROCESS, target={})
                 self.log.debug("waiting for revision to be loaded")
                 self.wait_for_state(
                     session,
-                    f"{base}/revision/{rev}",
+                    base,
+                    rev,
                     good=NT_RELOADING,
                     target=NT_CONFIRM,
                     timeout=self.timeout,
@@ -533,9 +557,20 @@ class DeployCumuls(DeployDriver):
 
                 self.wait_for_state(
                     session,
-                    f"{base}/revision/{rev}",
+                    base,
+                    rev,
                     good=NT_CONFIRM,
                     target=NT_APPLIED,
+                )
+
+                self.save_to_startup(base, session, rev)
+
+                self.wait_for_state(
+                    session,
+                    base,
+                    rev,
+                    good=NT_SAVING,
+                    target=NT_SAVED,
                 )
             self.log.debug(f"successfully deployed revision {rev}")
 
