@@ -317,7 +317,7 @@ class DeployCumuls(DeployDriver):
                     self.log.debug(f"got new state '{state}'")
                     return ("new state", res, state)
             except requests.exceptions.ConnectionError as e:
-                log.debug(
+                self.log.debug(
                     f"ignoring connection error while waiting for state changes: {e}"
                 )
             finally:
@@ -456,16 +456,19 @@ class DeployCumuls(DeployDriver):
                     and diff["system"].keys() == {"message"}
                     and diff["system"]["message"].keys() == {"pre-login"}
                 ):
-                    log.debug(
+                    self.log.debug(
                         "not activating revision which only changes the pre-login message"
                     )
                     return True
                 else:
-                    log.debug(
+                    self.log.debug(
                         "activating revision which changes more than pre-login message"
                     )
             except (KeyError, TypeError) as e:
-                log.error("diff error", exc_info=e)
+                self.log.error(
+                    f"encountered error while inspecting diff of revision {rev}",
+                    exc_info=e,
+                )
                 pass
 
             if self.cfg.dry_deploy:
