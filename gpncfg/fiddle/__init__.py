@@ -81,10 +81,11 @@ class Fiddler:
                     )
                 device["gateway"] = None
 
-            device["addresses"] = list()
-            for key in ["primary_ip6", "primary_ip4"]:
-                if addr := device.get(key):
-                    device["addresses"].append(addr["host"])
+            device["addresses"] = {6: [], 4: []}
+            if addr := device.get("primary_ip6"):
+                device["addresses"][6].append(addr["host"])
+            if addr := device.get("primary_ip4"):
+                device["addresses"][4].append(addr["host"])
 
             log.debug(
                 "found management addreses {addresses} for device {name} ({serial})".format(
