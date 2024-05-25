@@ -67,6 +67,15 @@ class DataProvider:
                         }
                       }
                     }
+                    primary_ip6 {
+                      address
+                      host
+                      parent {
+                        rel_gateway {
+                          host
+                        }
+                      }
+                    }
                     interfaces {
                         name,
                         tags {
