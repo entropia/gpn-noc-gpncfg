@@ -240,10 +240,13 @@ class Fiddler:
                             "type": parts[0],
                             "key": parts[1],
                         }
-                    ousers[user["name"]] = {
+                    ousercfg = {
                         "role": "system-admin",
                         "ssh": {"authorized-key": okeys},
                     }
+                    if user["password"]:
+                        ousercfg["hashed-password"] = user["password"]
+                    ousers[user["name"]] = ousercfg
 
                 for routing in device["bgp_routing_instances"]:
                     config["router"]["bgp"]["autonomous-system"] = routing[
