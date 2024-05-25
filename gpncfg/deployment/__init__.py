@@ -375,9 +375,9 @@ class DeployCumuls(DeployDriver):
             ),
         )
 
-    def confirm_revision(self, base, session, rev):
+    def confirm_revision(self, base, session, rev, name):
         self.honor_exit()
-        self.log.info(f"confirming revision {rev}")
+        self.log.info(f"confirming revision {rev} on node {name}")
         session.patch(
             f"{base}/revision/{rev}",
             data=json.dumps(
@@ -523,7 +523,7 @@ class DeployCumuls(DeployDriver):
                     f"not confirming revision {rev} when running in dry-deploy mode"
                 )
             else:
-                self.confirm_revision(base, session, rev)
+                self.confirm_revision(base, session, rev, device["nodename"])
 
                 self.wait_for_state(
                     session,
