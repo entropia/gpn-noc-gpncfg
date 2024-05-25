@@ -2,3 +2,6 @@
 nautobot-url = "https://nautobot.example.tld"
 snmp-community = "fill me"
 nautobot-token = "fill me"
+login-file = "~/.config/gpncfg/login.toml"
+nvue-pass = "fill me"
+dns-parent = "home.arpa"
