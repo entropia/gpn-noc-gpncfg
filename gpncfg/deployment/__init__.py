@@ -208,7 +208,7 @@ class DeployDriver:
 class DeployJunos(DeployDriver):
     def netcon_cmd(self, netcon, command, **kwargs):
         self.honor_exit()
-        netcon.send_command(command, **kwargs)
+        return netcon.send_command(command, **kwargs)
 
     def netcon_cfg_mode(self, netcon):
         self.honor_exit()
