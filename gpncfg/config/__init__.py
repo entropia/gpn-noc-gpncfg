@@ -231,7 +231,7 @@ class ConfigProvider:
                 "cannot configure invalid log level '{}'".format(self.options.log_level)
             )
             exit(1)
-        logging.getLogger("gpncfg").setLevel(self.options.log_level)
+        logging.getLogger().setLevel(self.options.log_level)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
         self.options.deploy_key = os.path.expanduser(self.options.deploy_key)
