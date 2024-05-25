@@ -271,7 +271,8 @@ class Fiddler:
                 config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
                 config["system"]["aaa"]["user"] = ousers
-                device["config"] = [{"set": config}]
+                device["config"] = config
+                # [{"set": config}]
 
             elif usecase == "switch_arista_sampelModel":
                 for iface in device["interfaces"]:
