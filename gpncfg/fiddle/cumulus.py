@@ -5,6 +5,7 @@ CUMULUS_CONFIG = {
     "interface": {},
     "system": {
         "aaa": {"user": {}},
+        "api": {"certificate": "web"},
         "config": {
             "auto-save": {"enable": "on"},
             "snippet": {
