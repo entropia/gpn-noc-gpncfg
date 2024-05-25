@@ -100,8 +100,10 @@ class DeployJunos(DeployDriver):
 
     def connect_junos(self, device):
         self.honor_exit()
-
-        for addr in device["addresses"]:
+        addrs = []
+        addrs.extend(device["addresses"][4])
+        addrs.extend(device["addresses"][6])
+        for addr in addrs:
             try:
                 self.log.debug(f"attempting to connect to address {addr}")
                 session_log = None
