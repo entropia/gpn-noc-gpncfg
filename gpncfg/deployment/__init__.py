@@ -401,7 +401,9 @@ class DeployCumuls(DeployDriver):
         def contact(self, session, addr):
             url = f"https://{addr}:{self.cfg.nvue_port}/nvue_v1/"
             self.log.debug(f"attempting to connect to {url}")
-            return session.get(url)
+            res = session.get(url)
+            log.debug(f"contacted addr {addr} got response {res} {res.text}")
+            return res
 
         for addr in device["addresses"][6]:
             addr = "[" + addr + "]"
