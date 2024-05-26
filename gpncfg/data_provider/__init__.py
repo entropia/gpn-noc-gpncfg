@@ -138,6 +138,10 @@ class DataProvider:
                         }
                       }
                    }
+                   rel_reject_routes {
+                       ip_version
+                       prefix
+                   }
                 },
                 vlans(
                     status:"Active"
