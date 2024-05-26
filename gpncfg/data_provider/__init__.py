@@ -29,7 +29,9 @@ class DataProvider:
 
         # Create a GraphQL client using the defined transport
         client = gql.Client(
-            transport=transport, fetch_schema_from_transport=True, execute_timeout=240
+            transport=transport,
+            fetch_schema_from_transport=True,
+            execute_timeout=self.cfg.graphql_timeout,
         )
 
         tenant = ""

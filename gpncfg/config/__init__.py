@@ -126,6 +126,11 @@ class ConfigProvider:
             help="what user to authenticate as when deploying configs",
         )
         parser.add_argument(
+            "--graphql-timeout",
+            default="240",
+            help="how log to wait for the graphql query to complete before timing out",
+        )
+        parser.add_argument(
             "--limit",
             default=[],
             help="comma separated list of nautobot device ids. deploy workers are started only for those devices.",
@@ -268,3 +273,5 @@ class ConfigProvider:
 
         if isinstance(self.options.limit, str):
             self.options.limit = self.options.limit.split(",")
+
+        self.options.graphql_timeout = int(self.options.graphql_timeout)
