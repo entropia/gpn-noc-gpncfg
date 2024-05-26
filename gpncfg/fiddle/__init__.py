@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 
 TRANS_SLUG = str.maketrans(" ", "-", "()")
+TRANS_SLUG.update(str.maketrans({"ß": "ss"}))
 
 
 def slugify(text):
