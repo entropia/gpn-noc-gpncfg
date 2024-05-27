@@ -96,8 +96,8 @@ class Fiddler:
 
             # add data based on usecase
             if (
-                device["role"]["name"] == "access-switch"
-                and device["device_type"]["manufacturer"]["name"] == "juniper"
+                device["role"]["name"] == "access switch"
+                and device["device_type"]["manufacturer"]["name"] == "Juniper"
             ):
                 # use json to escape special characters
                 device["motd"] = json.dumps(device["motd"])
