@@ -218,6 +218,10 @@ class Fiddler:
                     for tag in iif["tags"]:
                         if tag["name"] == "unnumbered bgp":
                             oneigh[iif["name"]] = UNNUMBERED_BGP
+                        elif tag["name"] == "send router advertisements":
+                            oif["ip"]["neighbor-discovery"] = {
+                                "router-advertisement": {"enable": "on"}
+                            }
 
                     ifaces[slugify(iif["name"])] = oif
 
