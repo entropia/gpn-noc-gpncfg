@@ -60,7 +60,9 @@ class Renderer:
             cwc.context["device"] = device
 
             if usecase == "core-switch_mellanox_sn2410":
-                cwc.config = json.dumps(device["config"], indent=2, sort_keys=True)
+                cwc.config = json.dumps(
+                    [{"set": device["config"]}], indent=2, sort_keys=True
+                )
             else:
                 try:
                     template = self.j2.get_template(usecase + ".j2")

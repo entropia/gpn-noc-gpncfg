@@ -6,7 +6,7 @@ import queue
 import threading
 import time
 from concurrent import futures
-from pprint import pprint as pp
+from pprint import pprint
 
 import gpncfg
 
@@ -100,7 +100,10 @@ class MainAction:
                 current = set(fut.id for fut in futs)
 
                 # create a set of device ids that are supposed to be deployed
-                active = set(get_id_from_cwc(cwc) for cwc in configs.values())
+                if self.cfg.limit:
+                    active = set(self.cfg.limit)
+                else:
+                    active = set(get_id_from_cwc(cwc) for cwc in configs.values())
 
                 # start worker routines for new devices
                 new = active - current
@@ -139,7 +142,16 @@ class MainAction:
 
                 # send new configs to devices
                 for cwc in configs.values():
-                    queues[get_id_from_cwc(cwc)].put(cwc)
+                    try:
+                        queues[get_id_from_cwc(cwc)].put(cwc)
+                    except KeyError:
+                        text = "no deploy worker for device {nodename} serial {serial} id {id}".format(
+                            **cwc.context["device"]
+                        )
+                        if self.cfg.limit:
+                            log.debug(text)
+                        else:
+                            log.warn(text)
 
                 # handle finished or crashed threads
                 done, futs = futures.wait(futs, timeout=0)

@@ -5,6 +5,7 @@ CUMULUS_CONFIG = {
     "interface": {},
     "system": {
         "aaa": {"user": {}},
+        "api": {"certificate": "web"},
         "config": {
             "auto-save": {"enable": "on"},
             "snippet": {
@@ -17,18 +18,24 @@ CUMULUS_CONFIG = {
                 }
             },
         },
-        "control-plane": {
-            "acl": {
-                "acl-default-dos": {"inbound": {}},
-                "acl-default-whitelist": {"inbound": {}},
-            }
-        },
         "reboot": {"mode": "cold"},
         "ssh-server": {},
         "wjh": {
             "channel": {"forwarding": {"trigger": {"l2": {}, "l3": {}, "tunnel": {}}}},
             "enable": "on",
         },
+    },
+    "service": {
+        "dns": {
+            "default": {
+                "server": {
+                    # https://libreops.cc/radicaldns.html server 1
+                    "2a01:4f8:1c0c:82c0::1": {},
+                    # https://libreops.cc/radicaldns.html server 2
+                    "2a03:f80:30:192:71:166:92:1": {},
+                }
+            }
+        }
     },
     "router": {
         "bgp": {

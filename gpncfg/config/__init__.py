@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from dataclasses import dataclass
+from pprint import pprint
 
 import configargparse
 import toml
@@ -24,6 +25,7 @@ class RootInfo(TomlDataClassIO):
 class UserInfo(TomlDataClassIO):
     uid: int
     name: str
+    password: str
     ecdsa: [str]
     ed25519: [str]
     rsa: [str]
@@ -103,6 +105,11 @@ class ConfigProvider:
             help="continually fetch data from nautobot and deploy devices",
         )
         parser.add_argument(
+            "--dns-parent",
+            help="combined with the nodename to assemble a device's fqdn. used to verify tls certs for the nvue api",
+            required=True,
+        )
+        parser.add_argument(
             "--dry-deploy",
             action="store_true",
             default=False,
@@ -117,6 +124,11 @@ class ConfigProvider:
             "--deploy-user",
             default="gpncfg",
             help="what user to authenticate as when deploying configs",
+        )
+        parser.add_argument(
+            "--limit",
+            default=[],
+            help="comma separated list of nautobot device ids. deploy workers are started only for those devices.",
         )
         parser.add_argument(
             "--login-file",
@@ -149,6 +161,16 @@ class ConfigProvider:
             action="store_true",
             default=False,
             help="only generate and write configs, do not deploy them to devices",
+        )
+        parser.add_argument(
+            "--nvue-pass",
+            help="password for the deploy user to authenticate to the nvue api",
+            required=True,
+        )
+        parser.add_argument(
+            "--nvue-port",
+            default=8765,
+            help="what port the nvue api is listening on",
         )
         parser.add_argument(
             "-o",
@@ -202,6 +224,7 @@ class ConfigProvider:
         ][1]
 
         refuse_secret_on_cli(args, "--nautobot-token")
+        refuse_secret_on_cli(args, "--nvue-pass")
         refuse_secret_on_cli(args, "--snmp-community")
 
         self.options = options
@@ -215,7 +238,9 @@ class ConfigProvider:
                 "cannot configure invalid log level '{}'".format(self.options.log_level)
             )
             exit(1)
-        logging.getLogger("gpncfg").setLevel(self.options.log_level)
+        logging.getLogger().setLevel(self.options.log_level)
+        logging.getLogger("gql").setLevel(logging.WARNING)
+        logging.getLogger("netmiko").setLevel(logging.INFO)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
         self.options.deploy_key = os.path.expanduser(self.options.deploy_key)
@@ -239,3 +264,6 @@ class ConfigProvider:
         if self.options.populate_cache and self.options.use_cache:
             log.fatal("cannot populate cache in offline mode")
             exit(1)
+
+        if isinstance(self.options.limit, str):
+            self.options.limit = self.options.limit.split(",")

@@ -81,10 +81,11 @@ class Fiddler:
                     )
                 device["gateway"] = None
 
-            device["addresses"] = list()
-            for key in ["primary_ip6", "primary_ip4"]:
-                if addr := device.get(key):
-                    device["addresses"].append(addr["host"])
+            device["addresses"] = {6: [], 4: []}
+            if addr := device.get("primary_ip6"):
+                device["addresses"][6].append(addr["host"])
+            if addr := device.get("primary_ip4"):
+                device["addresses"][4].append(addr["host"])
 
             log.debug(
                 "found management addreses {addresses} for device {name} ({serial})".format(
@@ -239,10 +240,13 @@ class Fiddler:
                             "type": parts[0],
                             "key": parts[1],
                         }
-                    ousers[user["name"]] = {
+                    ousercfg = {
                         "role": "system-admin",
                         "ssh": {"authorized-key": okeys},
                     }
+                    if user["password"]:
+                        ousercfg["hashed-password"] = user["password"]
+                    ousers[user["name"]] = ousercfg
 
                 for routing in device["bgp_routing_instances"]:
                     config["router"]["bgp"]["autonomous-system"] = routing[
@@ -270,7 +274,8 @@ class Fiddler:
                 config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
                 config["system"]["aaa"]["user"] = ousers
-                device["config"] = [{"set": config}]
+                device["config"] = config
+                # [{"set": config}]
 
             elif usecase == "switch_arista_sampelModel":
                 for iface in device["interfaces"]:
