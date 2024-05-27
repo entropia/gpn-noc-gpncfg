@@ -277,6 +277,16 @@ class Fiddler:
 
                 config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
+                ostatic = dict()
+
+                for prefix in device["rel_reject_routes"]:
+                    ostatic[prefix["prefix"]] = {
+                        "via": {"reject": {"type": "reject"}},
+                        "address-family": f"ipv{prefix['ip_version']}-unicast",
+                    }
+
+                config["vrf"]["default"]["router"]["static"] = ostatic
+
                 config["system"]["aaa"]["user"] = ousers
                 device["config"] = config
                 # [{"set": config}]
