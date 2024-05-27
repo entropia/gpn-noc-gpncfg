@@ -103,13 +103,15 @@ CUMULUS_CONFIG = {
                         "ipv4-unicast": {
                             "enable": "on",
                             "redistribute": {
-                                "connected": {"enable": "on", "route-map": "EVENTNET"}
+                                "connected": {"enable": "on", "route-map": "EVENTNET"},
+                                "static": {"enable": "on"},
                             },
                         },
                         "ipv6-unicast": {
                             "enable": "on",
                             "redistribute": {
-                                "connected": {"enable": "on", "route-map": "EVENTNET"}
+                                "connected": {"enable": "on", "route-map": "EVENTNET"},
+                                "static": {"enable": "on"},
                             },
                         },
                     },
