@@ -41,11 +41,12 @@ class DataProvider:
             """
             query {
                 devices(
-                    status__n: "Offline"
+                    tags__n: "gpncfg-ignore"
                     role: ["access switch" "core switch" "Router"]
                     %(tenant)s
                 ) {
                     name,
+                    status { name },
                     id,
                     serial,
                     location{name},

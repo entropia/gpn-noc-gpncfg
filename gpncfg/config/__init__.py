@@ -241,6 +241,7 @@ class ConfigProvider:
         logging.getLogger().setLevel(self.options.log_level)
         logging.getLogger("gql").setLevel(logging.WARNING)
         logging.getLogger("netmiko").setLevel(logging.INFO)
+        logging.getLogger("paramiko").setLevel(logging.WARNING)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
         self.options.deploy_key = os.path.expanduser(self.options.deploy_key)
