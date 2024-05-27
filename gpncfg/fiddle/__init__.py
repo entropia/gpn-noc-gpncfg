@@ -136,6 +136,13 @@ class Fiddler:
                         tagged.extend(
                             slugify(vlan["name"]) for vlan in iface["tagged_vlans"]
                         )
+
+                        if (
+                            device["device_type"]["model"] == "ex2300c-12p"
+                            and iface["untagged_vlan"]
+                        ):
+                            tagged.append(slugify(iface["untagged_vlan"]["name"]))
+
                         tagged.append("]")
                         iface["tagged_vlans_text"] = " ".join(tagged)
 
