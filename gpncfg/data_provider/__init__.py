@@ -29,7 +29,9 @@ class DataProvider:
 
         # Create a GraphQL client using the defined transport
         client = gql.Client(
-            transport=transport, fetch_schema_from_transport=True, execute_timeout=240
+            transport=transport,
+            fetch_schema_from_transport=True,
+            execute_timeout=self.cfg.graphql_timeout,
         )
 
         tenant = ""
@@ -41,6 +43,8 @@ class DataProvider:
             """
             query {
                 devices(
+                    status: ["Active","Staged","Planned"]
+                    manufacturer: ["Juniper", "Mellanox"]
                     tags__n: "gpncfg-ignore"
                     role: ["access switch" "core switch" "Router"]
                     %(tenant)s
@@ -135,6 +139,10 @@ class DataProvider:
                           }
                         }
                       }
+                   }
+                   rel_reject_routes {
+                       ip_version
+                       prefix
                    }
                 },
                 vlans(
