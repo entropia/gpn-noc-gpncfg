@@ -136,6 +136,10 @@ class UnknownStateError(Exception):
     pass
 
 
+class FailedStateError(Exception):
+    pass
+
+
 class DeployDriver:
     def __init__(self, cfg, exit, queue, id):
         self.cfg = cfg
@@ -340,34 +344,37 @@ class DeployCumuls(DeployDriver):
         self.log.debug(
             f"waiting {timeout} seconds for revision to change to state {target} or to stop being {good}"
         )
-        self.honor_exit()
-
         start = time.time()
         while True:
+            self.honor_exit()
             try:
                 res = session.get(f"{base}/revision/{rev}")
                 state = res.json()["state"]
                 self.log.debug(f"received {res} ({state})")
-                if state not in NT_VALID:
-                    raise UnknownStateError(
-                        f"nvue api returned unknown state for revision {rev}: '{state}'"
-                    )
-                elif state in target:
-                    self.log.debug(f"reached target state {state}")
-                    return ("ok", res, state)
-                elif timeout and time.time() - start > timeout:
-                    self.log.debug(f"reached timeout, latest state is '{state}'")
-                    return ("timeout", res, state)
-                elif state not in good:
-                    self.log.debug(f"got new state '{state}'")
-                    return ("new state", res, state)
             except requests.exceptions.ConnectionError as e:
                 self.log.debug(
                     f"ignoring connection error while waiting for state changes: {e}"
                 )
-            finally:
-                self.honor_exit()
-                time.sleep(1)
+                continue
+
+            if state not in NT_VALID:
+                raise UnknownStateError(
+                    f"nvue api returned unknown state for revision {rev}: '{state}'"
+                )
+            elif state in NT_FAIL:
+                raise FailedStateError(
+                    f"nvue api revision {rev} entered error indicating state '{state}'"
+                )
+            elif state in target:
+                self.log.debug(f"reached target state {state}")
+                return ("ok", res, state)
+            elif timeout and time.time() - start > timeout:
+                self.log.debug(f"reached timeout, latest state is '{state}'")
+                return ("timeout", res, state)
+            elif state not in good:
+                self.log.debug(f"got new state '{state}'")
+                return ("new state", res, state)
+            time.sleep(1)
 
     def cancel_revision(self, base, session, rev):
         self.log.debug(f"cancelling revision {rev}")
