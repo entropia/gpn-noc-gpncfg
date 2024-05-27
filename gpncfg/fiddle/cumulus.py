@@ -44,6 +44,7 @@ CUMULUS_CONFIG = {
         "policy": {
             "prefix-list": {
                 "EVENTNET4": {
+                    "type": "ipv4",
                     "rule": {
                         "10": {
                             "action": "permit",
@@ -55,9 +56,9 @@ CUMULUS_CONFIG = {
                             },
                         }
                     },
-                    "type": "ipv4",
                 },
                 "EVENTNET6": {
+                    "type": "ipv6",
                     "rule": {
                         "10": {
                             "action": "permit",
@@ -69,7 +70,6 @@ CUMULUS_CONFIG = {
                             },
                         }
                     },
-                    "type": "ipv6",
                 },
             },
             "route-map": {
@@ -78,15 +78,15 @@ CUMULUS_CONFIG = {
                         "10": {
                             "action": {"permit": {}},
                             "match": {
-                                "ip-prefix-list": "EVENTNET4",
                                 "type": "ipv4",
+                                "ip-prefix-list": "EVENTNET4",
                             },
                         },
                         "11": {
                             "action": {"permit": {}},
                             "match": {
-                                "ip-prefix-list": "EVENTNET6",
                                 "type": "ipv6",
+                                "ip-prefix-list": "EVENTNET6",
                             },
                         },
                     }
