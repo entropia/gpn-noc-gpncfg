@@ -43,6 +43,8 @@ class DataProvider:
             """
             query {
                 devices(
+                    status: ["Active","Staged","Planned"]
+                    manufacturer: ["Juniper", "Mellanox"]
                     tags__n: "gpncfg-ignore"
                     role: ["access switch" "core switch" "Router"]
                     %(tenant)s
