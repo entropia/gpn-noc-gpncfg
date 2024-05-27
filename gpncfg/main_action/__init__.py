@@ -85,6 +85,9 @@ class MainAction:
             os._exit(1)
 
     def run(self):
+        if self.cfg.populate_cache:
+            return self.fetch_data()
+
         futs = set()
         queues = dict()
         pool = futures.ThreadPoolExecutor()

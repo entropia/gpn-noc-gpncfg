@@ -73,11 +73,12 @@ class Fiddler:
                     "host"
                 ]
             except TypeError as e:
-                log.warn(
-                    "device has no gateway (name '{}' serial '{}')".format(
-                        device["name"], device["serial"]
+                if device["role"]["name"] == "access":
+                    log.warn(
+                        "access device has no gateway {nodename} {serial})".format(
+                            **device
+                        )
                     )
-                )
                 device["gateway"] = None
 
             device["addresses"] = list()
@@ -93,7 +94,7 @@ class Fiddler:
 
             # add data based on usecase
             if (
-                usecase == "access-switch_juniper_ex3300-24p"
+                usecase == "access-switch_juniper_ex3300-24t"
                 or usecase == "access-switch_juniper_ex3300-48p"
             ):
                 # use json to escape special characters
@@ -260,8 +261,11 @@ class Fiddler:
                         }
                 config["vrf"]["default"]["router"]["bgp"]["neighbor"] = oneigh
                 if not oneigh:
-                    log.error("deleting routing instance")
-                    del config["vrf"]["default"]["router"]
+                    log.warning(
+                        "routing instance has no neighbors {nodename} {serial}".format(
+                            **device
+                        )
+                    )
 
                 config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
