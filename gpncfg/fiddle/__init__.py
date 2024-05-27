@@ -146,6 +146,12 @@ class Fiddler:
                         tagged.append("]")
                         iface["tagged_vlans_text"] = " ".join(tagged)
 
+                        if (
+                            iface["mode"] == "TAGGED"
+                            and iface["tagged_vlans_text"] == "[ ]"
+                        ):
+                            iface["mode"] = None
+
                         # slugify the untagged vlan name
                         if iface["untagged_vlan"] is not None:
                             iface["untagged_vlan"]["name"] = slugify(
