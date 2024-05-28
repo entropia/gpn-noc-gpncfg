@@ -60,6 +60,7 @@ chassis {
 interfaces {
     {% for iface in device["physical_interfaces"] %}
     {{ iface["name"] }} {
+        mtu 9014;
         unit 0 {
             family ethernet-switching {
             {% if iface["mode"] == "ACCESS" %}
@@ -113,7 +114,18 @@ protocols {
     igmp-snooping {
         vlan all;
     }
-    rstp;
+    rstp {
+        {% for iface in device["physical_interfaces"] %}
+            {% if iface["_custom_field_data"]["trusted"] %}
+        interface {{ iface["name"] }}.0;
+            {% else %}
+        interface {{ iface["name"] }}.0 {
+            edge;
+            no-root-port;
+        }
+            {% endif %}
+        {% endfor %}
+    }
     lldp {
         interface all;
     }
@@ -136,16 +148,6 @@ ethernet-switching-options {
     storm-control {
         interface all;
     }
-    bpdu-block {
-        {% for iface in device["physical_interfaces"] %}
-            {% if iface["_custom_field_data"]["trusted"] %}
-        # interface {{ iface["name"] }}.0;
-            {% else %}
-        interface {{ iface["name"] }}.0;
-            {% endif %}
-        {% endfor %}
-        disable-timeout 10;
-   }
 }
 vlans {
 {% for vlan in vlans %}
