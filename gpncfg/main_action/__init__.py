@@ -42,6 +42,14 @@ def log_worker_result(task):
         log.debug(f"{name} completed with result {task.result(0)}")
 
 
+def log_action_result(task):
+    name = f"action thread {task.id}"
+    if exc := task.exception(0):
+        log.error(f"{name} encountered an error", exc_info=exc)
+    else:
+        log.error(f"{name} finished unexpectedly with result {task.result(0)}")
+
+
 class MainAction:
     def __init__(self):
         logging.getLogger().addHandler(gpncfg.color_handler())
@@ -93,6 +101,7 @@ class MainAction:
             return self.fetch_data()
 
         futs_device = set()
+        futs_action = set()
         queues = dict()
         pool = futures.ThreadPoolExecutor()
         try:
@@ -167,6 +176,13 @@ class MainAction:
                 for fut in done_device:
                     log_worker_result(fut)
                     del queues[fut.id]
+                done_action, futs_action = futures.wait(futs_action, timeout=0)
+                for fut in done_action:
+                    log_action_result(fut)
+                    del queues[fut.id]
+                if done_action:
+                    ids = set(fut.id for fut in done_action)
+                    raise Exception(f"some action threads finished unexpectedly {ids}")
 
                 # only loop in daemon mode
                 if not self.cfg.daemon:
@@ -207,6 +223,7 @@ class MainAction:
 
                 # wait for workers to finish and log their result
                 futs = futs_device
+                futs.update(futs_action)
                 for fut in futures.as_completed(futs):
                     log_worker_result(fut)
 
