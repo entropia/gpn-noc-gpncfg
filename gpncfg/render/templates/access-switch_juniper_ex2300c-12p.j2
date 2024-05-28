@@ -60,31 +60,34 @@ chassis {
 interfaces {
     {% for iface in device["physical_interfaces"] %}
     {{ iface["name"] }} {
+        {% if iface["mode"] in ["TAGGED", "TAGGED_ALL"] %}
+        native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
+        {% endif %}
+        {% if iface["mode"] in ["ACCESS", "TAGGED", "TAGGED_ALL"] %}
         unit 0 {
             family ethernet-switching {
             {% if iface["mode"] == "ACCESS" %}
-                port-mode access;
+                interface-mode access;
                 vlan {
                     members {{ iface["untagged_vlan"]["name"] }};
                 }
-            {% elif iface["mode"] == "TAGGED" %}
-                port-mode trunk;
+            {% elif iface["mode"] == "TAGGED" and iface["tagged_vlans_text"] != [] %}
+                interface-mode trunk;
                 vlan {
                     members {{ iface["tagged_vlans_text"] }};
                 }
-                native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
             {% elif iface["mode"] == "TAGGED_ALL" %}
-                port-mode trunk;
+                interface-mode trunk;
                 vlan {
                     members all;
                 }
-                native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
             {% endif %}
             }
         }
+        {% endif %}
     }
     {% endfor %}
-    vlan {
+    irb {
         {% for iface in device["virtual_interfaces"] %}
         unit {{ iface["untagged_vlan"]["vid"] }} {
             family inet {
@@ -121,38 +124,38 @@ protocols {
         interface all;
     }
 }
-ethernet-switching-options {
-    secure-access-port {
-        {% for iface in device["physical_interfaces"] %}
-        interface {{ iface["name"] }}.0 {
-            {% if iface["_custom_field_data"]["trusted"] %}
-            dhcp-trusted;
-            {% else %}
-            no-dhcp-trusted;
-            {% endif %}
-        }
-        {% endfor %}
-    }
-    storm-control {
-        interface all;
-    }
-    bpdu-block {
-        {% for iface in device["physical_interfaces"] %}
-            {% if iface["_custom_field_data"]["trusted"] %}
-        # interface {{ iface["name"] }}.0;
-            {% else %}
-        interface {{ iface["name"] }}.0;
-            {% endif %}
-        {% endfor %}
-        disable-timeout 10;
-   }
-}
+{#ethernet-switching-options {#}
+{#    secure-access-port {#}
+{#        {% for iface in device["physical_interfaces"] %}#}
+{#        interface {{ iface["name"] }}.0 {#}
+{#            {% if iface["_custom_field_data"]["trusted"] %}#}
+{#            dhcp-trusted;#}
+{#            {% else %}#}
+{#            no-dhcp-trusted;#}
+{#            {% endif %}#}
+{#        }#}
+{#        {% endfor %}#}
+{#    }#}
+{#    storm-control {#}
+{#        interface all;#}
+{#    }#}
+{#    bpdu-block {#}
+{#        {% for iface in device["physical_interfaces"] %}#}
+{#            {% if iface["_custom_field_data"]["trusted"] %}#}
+{#        # interface {{ iface["name"] }}.0;#}
+{#            {% else %}#}
+{#        interface {{ iface["name"] }}.0;#}
+{#            {% endif %}#}
+{#        {% endfor %}#}
+{#        disable-timeout 10;#}
+{#   }#}
+{#}#}
 vlans {
 {% for vlan in vlans %}
     {{ vlan["name"] }} {
         vlan-id {{ vlan["vid"] }};
         {% if vlan["vid"] in device["vids"] %}
-        l3-interface vlan.{{ vlan["vid"] }};
+        l3-interface irb.{{ vlan["vid"] }};
         {% endif %}
     }
 {% endfor %}
