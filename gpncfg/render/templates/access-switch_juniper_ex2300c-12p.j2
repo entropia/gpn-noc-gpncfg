@@ -60,6 +60,7 @@ chassis {
 interfaces {
     {% for iface in device["physical_interfaces"] %}
     {{ iface["name"] }} {
+        mtu 9014;
         {% if iface["mode"] in ["TAGGED", "TAGGED_ALL"] %}
         native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
         {% endif %}
@@ -116,7 +117,18 @@ protocols {
     igmp-snooping {
         vlan all;
     }
-    rstp;
+    rstp {
+        {% for iface in device["physical_interfaces"] %}
+            {% if iface["_custom_field_data"]["trusted"] %}
+        interface {{ iface["name"] }};
+            {% else %}
+        interface {{ iface["name"] }} {
+            edge;
+            no-root-port;
+        }
+            {% endif %}
+        {% endfor %}
+    }
     lldp {
         interface all;
     }
@@ -124,32 +136,11 @@ protocols {
         interface all;
     }
 }
-{#ethernet-switching-options {#}
-{#    secure-access-port {#}
-{#        {% for iface in device["physical_interfaces"] %}#}
-{#        interface {{ iface["name"] }}.0 {#}
-{#            {% if iface["_custom_field_data"]["trusted"] %}#}
-{#            dhcp-trusted;#}
-{#            {% else %}#}
-{#            no-dhcp-trusted;#}
-{#            {% endif %}#}
-{#        }#}
-{#        {% endfor %}#}
-{#    }#}
-{#    storm-control {#}
-{#        interface all;#}
-{#    }#}
-{#    bpdu-block {#}
-{#        {% for iface in device["physical_interfaces"] %}#}
-{#            {% if iface["_custom_field_data"]["trusted"] %}#}
-{#        # interface {{ iface["name"] }}.0;#}
-{#            {% else %}#}
-{#        interface {{ iface["name"] }}.0;#}
-{#            {% endif %}#}
-{#        {% endfor %}#}
-{#        disable-timeout 10;#}
-{#   }#}
-{#}#}
+forwarding-options {
+    storm-control {
+        enhanced;
+    }
+}
 vlans {
 {% for vlan in vlans %}
     {{ vlan["name"] }} {
@@ -157,6 +148,22 @@ vlans {
         {% if vlan["vid"] in device["vids"] %}
         l3-interface irb.{{ vlan["vid"] }};
         {% endif %}
+        forwarding-options {
+            dhcp-security {
+                ip-source-guard;
+                ipv6-source-guard;
+                group trusted {
+                    overrides {
+                        trusted;
+                    }
+		    {% for iface in device["physical_interfaces"] %}
+	                {% if iface["_custom_field_data"]["trusted"] %}
+                    interface {{ iface["name"] }}.0;
+		        {% endif %}
+		    {% endfor %}
+                }
+            }
+        }
     }
 {% endfor %}
 }
