@@ -12,6 +12,8 @@ import netmiko
 import requests
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
+from ..threadaction import Action
+
 log = logging.getLogger(__name__)
 
 # all nvue trainsitions that are valid
@@ -122,12 +124,6 @@ NT_SAVED = {
 }
 
 
-# like SystemExit and asyncio.exceptions.CancelledError, inherit from
-# BaseException. This way, the shutdown can not be confused with an error.
-class ShutdownCommencing(BaseException):
-    pass
-
-
 class IntangibleDeviceError(Exception):
     pass
 
@@ -140,19 +136,12 @@ class FailedStateError(Exception):
     pass
 
 
-class DeployDriver:
+class DeployDriver(Action):
     def __init__(self, cfg, exit, queue, id):
-        self.cfg = cfg
-        self.exit = exit
+        super().__init__(cfg, exit, f"worker#{id}")
         self.queue = queue
         self.id = id
         self.usecase = None
-        self.log = logging.getLogger(__name__).getChild(f"worker#{id}")
-
-    def honor_exit(self):
-        if self.exit.is_set():
-            self.log.debug("honoring shutdown request")
-            raise ShutdownCommencing()
 
     def assert_prop(self, device, name):
         old = self.__getattribute__(name)

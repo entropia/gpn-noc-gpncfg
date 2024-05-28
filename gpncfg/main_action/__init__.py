@@ -10,7 +10,7 @@ from pprint import pprint
 
 import gpncfg
 
-from .. import deployment
+from .. import deployment, threadaction
 from ..config import ConfigProvider
 from ..data_provider import DataProvider
 from ..fiddle import Fiddler
@@ -34,7 +34,7 @@ def shall_deploy(cwc):
 def log_worker_result(task):
     name = f"worker thread {task.id}"
     if exc := task.exception(0):
-        if isinstance(exc, deployment.ShutdownCommencing):
+        if isinstance(exc, threadaction.ShutdownCommencing):
             log.debug(f"{name} finished early after receiving a shutdown request")
         else:
             log.error(f"{name} encountered an error", exc_info=exc)
@@ -92,7 +92,7 @@ class MainAction:
         if self.cfg.populate_cache:
             return self.fetch_data()
 
-        futs = set()
+        futs_device = set()
         queues = dict()
         pool = futures.ThreadPoolExecutor()
         try:
@@ -101,7 +101,7 @@ class MainAction:
                 configs = self.fetch_data()
 
                 # create a set of device ids that we have threads for
-                current = set(fut.id for fut in futs)
+                current = set(fut.id for fut in futs_device)
 
                 # create a set of device ids that are supposed to be deployed
                 if self.cfg.limit:
@@ -128,7 +128,7 @@ class MainAction:
                             driver(self.cfg, self.exit, queues[id], id).worker_loop
                         )
                         task.id = id
-                        futs.add(task)
+                        futs_device.add(task)
                     else:
                         missing_usecases.add(usecase)
 
@@ -146,7 +146,7 @@ class MainAction:
                     )
                     for id in old:
                         del queues[id]
-                        finished = futs.remove(id)
+                        finished = futs_device.remove(id)
 
                 # send new configs to devices
                 for cwc in configs.values():
@@ -163,10 +163,10 @@ class MainAction:
                             log.error(text)
 
                 # handle finished or crashed threads
-                done, futs = futures.wait(futs, timeout=0)
-                for fut in done:
-                    del queues[fut.id]
+                done_device, futs_device = futures.wait(futs_device, timeout=0)
+                for fut in done_device:
                     log_worker_result(fut)
+                    del queues[fut.id]
 
                 # only loop in daemon mode
                 if not self.cfg.daemon:
@@ -182,7 +182,7 @@ class MainAction:
             )
             pool.shutdown(wait=False, cancel_futures=False)
             # wait for workers to finish and log their result
-            for fut in futures.as_completed(futs):
+            for fut in futures.as_completed(futs_device):
                 log_worker_result(fut)
         except (Exception, KeyboardInterrupt) as e:
             try:
@@ -204,6 +204,7 @@ class MainAction:
                 )
 
                 # wait for workers to finish and log their result
+                futs = futs_device
                 for fut in futures.as_completed(futs):
                     log_worker_result(fut)
 
