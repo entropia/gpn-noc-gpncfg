@@ -191,6 +191,10 @@ class DeployDriver:
             self.assert_prop(cwc.context["device"], "usecase")
             self.assert_prop(cwc.context["device"], "id")
 
+            self.log = logging.getLogger(__name__).getChild(
+                "worker#{id}({nodename})".format(**cwc.context["device"])
+            )
+
             serial = cwc.context["device"]["serial"]
             self.log.debug("writing config for serial " + serial)
             cwc.path = os.path.abspath(
