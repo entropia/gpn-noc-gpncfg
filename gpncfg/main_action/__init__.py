@@ -3,6 +3,7 @@
 import logging
 import os
 import queue
+import shutil
 import threading
 import time
 from concurrent import futures
@@ -15,6 +16,7 @@ from ..config import ConfigProvider
 from ..data_provider import DataProvider
 from ..fiddle import Fiddler
 from ..render import Renderer
+from ..writer import Writer
 
 log = logging.getLogger(__name__)
 
@@ -62,6 +64,7 @@ class MainAction:
 
         self.fiddler = Fiddler(self.cfg)
         self.renderer = Renderer(self.cfg)
+        self.writer = Writer(self.cfg, self.exit)
 
         log.info("gpncfg greets gulli gulasch")
 
@@ -105,9 +108,12 @@ class MainAction:
         queues = dict()
         pool = futures.ThreadPoolExecutor()
         try:
+            self.writer.spawn(pool, futs_action, queues)
             while True:
                 # wait for new data from nautobot
                 configs = self.fetch_data()
+
+                queues["action-writer"].put(configs.values())
 
                 # create a set of device ids that we have threads for
                 current = set(fut.id for fut in futs_device)
@@ -201,7 +207,7 @@ class MainAction:
             for fut in futures.as_completed(futs_device):
                 log_worker_result(fut)
 
-            os.removedirs("/var/tmp/gpncfg")
+            shutil.rmtree("/var/tmp/gpncfg")
         except (Exception, KeyboardInterrupt) as e:
             try:
                 # log why the main thread was interrupted
