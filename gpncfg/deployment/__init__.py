@@ -189,8 +189,7 @@ class DeployDriver:
             self.log.debug(f"received new config: {cwc}")
 
             self.assert_prop(cwc.context["device"], "usecase")
-            # assert self.usecase == cwc.context["device"]["usecase"]
-            # assert self.id == cwc.context["device"]["id"]
+            self.assert_prop(cwc.context["device"], "id")
 
             serial = cwc.context["device"]["serial"]
             self.log.debug("writing config for serial " + serial)
