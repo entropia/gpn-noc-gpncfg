@@ -157,3 +157,12 @@ vlans {
     }
 {% endfor %}
 }
+poe {
+{% for iface in device["physical_interfaces"] %}
+    {% if iface["_custom_field_data"]["poe"] %}
+        interface {{ iface["name"] }};
+    {% else %}
+        # interface {{ iface["name"] }};
+    {% endif %}
+{% endfor %}
+}
