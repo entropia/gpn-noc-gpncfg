@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 
 TRANS_SLUG = str.maketrans(" ", "-", "()")
+TRANS_SLUG.update(str.maketrans({"ß": "ss"}))
 
 
 def slugify(text):
@@ -95,8 +96,8 @@ class Fiddler:
 
             # add data based on usecase
             if (
-                usecase == "access-switch_juniper_ex3300-24t"
-                or usecase == "access-switch_juniper_ex3300-48p"
+                device["role"]["name"] == "access switch"
+                and device["device_type"]["manufacturer"]["name"] == "Juniper"
             ):
                 # use json to escape special characters
                 device["motd"] = json.dumps(device["motd"])
@@ -135,8 +136,21 @@ class Fiddler:
                         tagged.extend(
                             slugify(vlan["name"]) for vlan in iface["tagged_vlans"]
                         )
+
+                        if (
+                            device["device_type"]["model"] == "ex2300c-12p"
+                            and iface["untagged_vlan"]
+                        ):
+                            tagged.append(slugify(iface["untagged_vlan"]["name"]))
+
                         tagged.append("]")
                         iface["tagged_vlans_text"] = " ".join(tagged)
+
+                        if (
+                            iface["mode"] == "TAGGED"
+                            and iface["tagged_vlans_text"] == "[ ]"
+                        ):
+                            iface["mode"] = None
 
                         # slugify the untagged vlan name
                         if iface["untagged_vlan"] is not None:
