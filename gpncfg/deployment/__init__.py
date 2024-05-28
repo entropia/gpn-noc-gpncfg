@@ -177,14 +177,14 @@ class DeployDriver(Action):
 
             self.log.debug(f"received new config: {cwc}")
 
-            self.assert_prop(cwc.context["device"], "usecase")
-            self.assert_prop(cwc.context["device"], "id")
+            self.assert_prop(cwc.device, "usecase")
+            self.assert_prop(cwc.device, "id")
 
             self.log = logging.getLogger(__name__).getChild(
-                "worker#{id}({nodename})".format(**cwc.context["device"])
+                "worker#{id}({nodename})".format(**cwc.device)
             )
 
-            serial = cwc.context["device"]["serial"]
+            serial = cwc.device["serial"]
             self.log.debug("writing config for serial " + serial)
             cwc.path = os.path.abspath(
                 os.path.join(self.cfg.output_dir, "config-" + serial)
@@ -257,7 +257,7 @@ class DeployJunos(DeployDriver):
         )
 
     def deploy(self, cwc):
-        device = cwc.context["device"]
+        device = cwc.device
         self.log.debug("starting deployment")
 
         netcon = self.connect_junos(device)
@@ -473,7 +473,7 @@ class DeployCumuls(DeployDriver):
         return None
 
     def deploy(self, cwc):
-        device = cwc.context["device"]
+        device = cwc.device
         self.log.debug("starting deployment")
 
         session = requests.Session()

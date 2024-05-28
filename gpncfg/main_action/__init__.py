@@ -24,11 +24,11 @@ def run():
 
 
 def get_id_from_cwc(cwc):
-    return cwc.context["device"]["id"]
+    return cwc.device["id"]
 
 
 def shall_deploy(cwc):
-    return cwc.context["device"]["status"]["name"] in {"Active", "Staged"}
+    return cwc.device["status"]["name"] in {"Active", "Staged"}
 
 
 def log_worker_result(task):
@@ -120,7 +120,7 @@ class MainAction:
                     log.info(f"spawning workers for new devices {new}")
                 for id in new:
                     queues[id] = queue.Queue()
-                    usecase = configs[id].context["device"]["usecase"]
+                    usecase = configs[id].device["usecase"]
 
                     driver = deployment.DRIVERS.get(usecase)
                     if driver:
@@ -155,7 +155,7 @@ class MainAction:
                         queues[id].put(cwc)
                     except KeyError:
                         text = "no deploy worker for device {nodename} serial {serial} id {id}".format(
-                            **cwc.context["device"]
+                            **cwc.device
                         )
                         if self.cfg.limit or not shall_deploy(cwc):
                             log.debug(text)
