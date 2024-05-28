@@ -184,6 +184,8 @@ class MainAction:
             # wait for workers to finish and log their result
             for fut in futures.as_completed(futs_device):
                 log_worker_result(fut)
+
+            os.removedirs("/var/tmp/gpncfg")
         except (Exception, KeyboardInterrupt) as e:
             try:
                 # log why the main thread was interrupted

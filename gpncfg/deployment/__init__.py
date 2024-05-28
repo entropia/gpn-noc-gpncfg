@@ -184,14 +184,6 @@ class DeployDriver(Action):
                 "worker#{id}({nodename})".format(**cwc.device)
             )
 
-            serial = cwc.device["serial"]
-            self.log.debug("writing config for serial " + serial)
-            cwc.path = os.path.abspath(
-                os.path.join(self.cfg.output_dir, "config-" + serial)
-            )
-            with open(cwc.path, "w+") as file:
-                print(cwc.config, file=file)
-
             if self.cfg.no_deploy:
                 self.log.debug("as commanded, gpncfg shall not deploy to devices")
             else:
@@ -260,6 +252,13 @@ class DeployJunos(DeployDriver):
         device = cwc.device
         self.log.debug("starting deployment")
 
+        serial = cwc.device["serial"]
+        self.log.debug("writing config for serial " + serial)
+        os.makedirs("/var/tmp/gpncfg", mode=0o751, exist_ok=True)
+        tmp = os.path.abspath(os.path.join("/var/tmp/gpncfg", "config-" + serial))
+        with open(tmp, "w+") as file:
+            print(cwc.config, file=file)
+
         netcon = self.connect_junos(device)
         if not netcon:
             self.log.error(
@@ -278,6 +277,11 @@ class DeployJunos(DeployDriver):
                 dest_file="gpncfg-upload.cfg",
                 overwrite_file=True,
             )
+
+        try:
+            os.remove(tmp)
+        except FileNotFoundError:
+            pass
 
         self.log.debug("config was successfuly uploaded, applying configuration")
         self.netcon_cfg_mode(netcon)
