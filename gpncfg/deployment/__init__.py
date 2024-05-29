@@ -155,6 +155,14 @@ class DeployDriver(Action):
 
     def worker_loop(self):
         cwc = None
+        self.log.debug("hello world")
+        try:
+            self.worker_loop_actual()
+        except Exception as e:
+            self.log.error("worker thread encountered exception", exc_info=e)
+            raise e
+
+    def worker_loop_actual(self):
         while True:
             # wait for new updates to come in. if there are multiple, ignore the latest
             self.log.debug("waiting for new config")
