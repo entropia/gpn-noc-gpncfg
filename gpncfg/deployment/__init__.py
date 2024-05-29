@@ -136,6 +136,9 @@ class FailedStateError(Exception):
 
 class DeployDriver(Action):
     def __init__(self, cfg, exit, queue, id, alive):
+        log.debug(
+            "deploy driver started with args {}".format([self, exit, queue, id, alive])
+        )
         super().__init__(cfg, exit, f"worker#{id}")
         self.queue = queue
         self.id = id
