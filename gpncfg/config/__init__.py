@@ -99,6 +99,11 @@ class ConfigProvider:
             # required=True,
         )
         parser.add_argument(
+            "--config-age",
+            default=60 * 10,
+            help="how long to keep config files in the output directory",
+        )
+        parser.add_argument(
             "--daemon",
             action="store_true",
             default=False,
@@ -275,3 +280,4 @@ class ConfigProvider:
             self.options.limit = self.options.limit.split(",")
 
         self.options.graphql_timeout = int(self.options.graphql_timeout)
+        self.options.config_age = int(self.options.config_age)
