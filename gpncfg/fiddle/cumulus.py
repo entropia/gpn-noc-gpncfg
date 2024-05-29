@@ -45,6 +45,20 @@ CUMULUS_CONFIG = {
                 "pool": {},
             },
         },
+        "snmp-server": {
+            "enable": "on",
+            "listening-address": {
+                "all": {},
+                "all-v6": {},
+            },
+            "readonly-community": {
+                "b33c11c5a0914eb4b3b755334b9c68ca": {
+                    "access": {
+                        "any": {},
+                    },
+                },
+            },
+        },
     },
     "router": {
         "bgp": {
