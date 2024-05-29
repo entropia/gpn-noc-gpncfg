@@ -17,8 +17,7 @@ class Writer(Action):
     def worker_loop(self, q):
         self.log.debug("starting loop")
         while True:
-            # wait for new updates to come in. if there are multiple, ignore the latest
-            self.log.debug("waiting for new config")
+            self.log.debug("waiting for new configs")
             while True:
                 try:
                     configs = q.get(timeout=1)

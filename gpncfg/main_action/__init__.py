@@ -207,7 +207,10 @@ class MainAction:
             for fut in futures.as_completed(futs_device):
                 log_worker_result(fut)
 
-            shutil.rmtree("/var/tmp/gpncfg")
+            try:
+                shutil.rmtree("/var/tmp/gpncfg")
+            except FileNotFoundError:
+                pass
         except (Exception, KeyboardInterrupt) as e:
             try:
                 # log why the main thread was interrupted
