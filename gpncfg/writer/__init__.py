@@ -33,6 +33,14 @@ class Writer(Action):
     def write_config(self, cwc):
         device = cwc.device
         serial = device["serial"]
+        if not cwc.config:
+            self.log.debug(
+                "not writing config for serial {serial} because it is empty".format(
+                    **device
+                )
+            )
+            return
+
         self.log.debug("writing config for serial {serial}".format(**device))
         name_serial = "config-{serial}".format(**device)
         cwc.path = os.path.abspath(os.path.join(self.cfg.output_dir, name_serial))

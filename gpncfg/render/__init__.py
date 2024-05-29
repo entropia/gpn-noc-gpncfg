@@ -32,6 +32,7 @@ class Conglomerate:
         self.context["config"] = self.cfg.__dict__
         self.context["vlans"] = vlans
         self.context["device"] = device
+        self.config = None
 
     def set_config(self, config):
         self.config = config
