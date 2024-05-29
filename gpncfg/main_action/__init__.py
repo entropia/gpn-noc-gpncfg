@@ -156,17 +156,6 @@ class MainAction:
                         f"unable to find deployment driver for {missing_usecases}"
                     )
 
-                # shut down worker routines of devices that were relevant before
-                # but are not included in this update
-                old = current - active
-                if old:
-                    log.debug(
-                        f"shutting down workers for no longer relevant devices: {old}"
-                    )
-                    for id in old:
-                        del queues[id]
-                        finished = futs_device.remove(id)
-
                 # send new configs to devices
                 for cwc in configs.values():
                     id = get_id_from_cwc(cwc)
