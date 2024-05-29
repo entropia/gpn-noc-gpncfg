@@ -101,6 +101,12 @@ interfaces {
         {% endfor %}
     }
 }
+snmp {
+    location "{{ device["location"]["name"] }}"
+    community "{{ config["snmp_community"] }}" {
+        authorization read-only;
+    }
+}
 routing-options {
     rib inet.0 {
         {% if device["gateway"] %}
