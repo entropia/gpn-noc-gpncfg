@@ -16,7 +16,7 @@ from ..config import ConfigProvider
 from ..data_provider import DataProvider
 from ..fiddle import Fiddler
 from ..render import Renderer
-from ..writer import Writer
+from ..writer import Cleaner, Writer
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +65,7 @@ class MainAction:
         self.fiddler = Fiddler(self.cfg)
         self.renderer = Renderer(self.cfg)
         self.writer = Writer(self.cfg, self.exit)
+        self.cleaner = Cleaner(self.cfg, self.exit)
 
         log.info("gpncfg greets gulli gulasch")
 
@@ -109,11 +110,14 @@ class MainAction:
         pool = futures.ThreadPoolExecutor()
         try:
             self.writer.spawn(pool, futs_action, queues)
+            self.cleaner.spawn(pool, futs_action, queues)
             while True:
                 # wait for new data from nautobot
                 configs = self.fetch_data()
 
-                queues["action-writer"].put(configs.values())
+                for action in ["action-writer", "action-cleaner"]:
+                    if q := queues.get(action):
+                        q.put(configs.values())
 
                 # create a set of device ids that we have threads for
                 current = set(fut.id for fut in futs_device)

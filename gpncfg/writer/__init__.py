@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import queue
+import time
 from pprint import pprint
 
 from ..threadaction import Action
@@ -52,10 +53,41 @@ class Writer(Action):
         )
         if os.path.islink(by_name):
             try:
-                os.remote(islink)
+                os.remove(by_name)
             except FileNotFoundError:
                 pass
         try:
             os.symlink(name_serial, by_name)
         except FileExistsError:
             pass
+
+
+class Cleaner(Action):
+    def __init__(self, *args):
+        self.name = "action-cleaner"
+        super().__init__(*args, self.name)
+
+    def worker_loop(self, _):
+        self.log.debug("starting loop")
+        while True:
+            max_age = 0
+            current = time.time()
+            for file in os.listdir(self.cfg.output_dir):
+                path = os.path.join(self.cfg.output_dir, file)
+                mtime = os.lstat(path).st_mtime
+                age = current - mtime
+                if age > self.cfg.config_age:
+                    self.log.debug(f"removing old config file {file} with age  {age}s")
+                    os.remove(path)
+                elif age > max_age:
+                    max_age = age
+            wait = self.cfg.config_age
+            if wait > max_age:
+                wait -= max_age
+            else:
+                raise Exception(
+                    "oldest file ({max_age}s) is older than max config age ({self.cfg.config_age}s), deleting must have gone wrong"
+                )
+            self.log.debug(f"sleeping for {wait} seconds")
+            self.exit.wait(timeout=wait)
+            self.honor_exit()
