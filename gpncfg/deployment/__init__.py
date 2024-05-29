@@ -12,7 +12,7 @@ import netmiko
 import requests
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
-from ..threadaction import Action
+from ..threadaction import Action, ShutdownCommencing
 
 log = logging.getLogger(__name__)
 
