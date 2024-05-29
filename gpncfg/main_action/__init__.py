@@ -169,18 +169,33 @@ class MainAction:
                         else:
                             log.error(text)
 
+                log.debug("main thread queries finished device workers")
+
                 # handle finished or crashed threads
                 done_device, futs_device = futures.wait(futs_device, timeout=0)
                 for fut in done_device:
                     log_worker_result(fut)
                     del queues[fut.id]
+
+                log.debug("main thread queries finished action workers")
                 done_action, futs_action = futures.wait(futs_action, timeout=0)
                 for fut in done_action:
                     log_action_result(fut)
                     del queues[fut.id]
                 if self.cfg.daemon and done_action:
-                    ids = set(fut.id for fut in done_action)
+                    ids = []
+                    for fut in done_action:
+                        ids.append(fut.id)
+                    log.error(
+                        "raising exception to exit main thread because action workers existed early"
+                    )
                     raise Exception(f"some action threads finished unexpectedly {ids}")
+
+                ids = []
+                for fut in futs_device:
+                    ids.append(f"<id: {fut.id} fut {fut}>")
+
+                log.debug(f"main thread knows about these device workers: {ids}")
 
                 for alive in alives:
                     if not alive.event.is_set():
@@ -213,6 +228,7 @@ class MainAction:
             except FileNotFoundError:
                 pass
         except (Exception, KeyboardInterrupt) as e:
+            log.debug("preparing to handle an exception in main thread", exc_info=e)
             try:
                 # log why the main thread was interrupted
                 if isinstance(e, Exception):
@@ -252,4 +268,13 @@ class MainAction:
                     "main thread encountered error while trying to exit, force exiting now",
                     exc_info=e,
                 )
+                futs = futs_device
+                futs.update(futs_action)
+                if not futs:
+                    log.debug("futs is empty")
+                for fut in futs:
+                    if fut.running():
+                        log.info(f"remaining device worker {fut} with id {fut.id}")
+                    else:
+                        log.debug(f"remaining device worker {fut} with id {fut.id}")
                 os._exit(1)
