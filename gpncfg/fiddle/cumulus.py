@@ -35,7 +35,16 @@ CUMULUS_CONFIG = {
                     "2a03:f80:30:192:71:166:92:1": {},
                 }
             }
-        }
+        },
+        "dhcp-server": {
+            "default": {
+                "domain-name-server": {
+                    "151.216.64.55": {},
+                    "151.216.64.56": {},
+                },
+                "pool": {},
+            },
+        },
     },
     "router": {
         "bgp": {

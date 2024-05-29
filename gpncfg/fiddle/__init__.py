@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+import ipaddress
 from pprint import pprint
 
 import jinja2
@@ -236,6 +237,23 @@ class Fiddler:
                             oif["ip"]["neighbor-discovery"] = {
                                 "router-advertisement": {"enable": "on"}
                             }
+                        elif tag["name"] == "dhcp server":
+                            for addr in iif["ip_addresses"]:
+                                if addr["ip_version"] != 4:
+                                    continue
+                                ip = ipaddress.IPv4Network(addr["address"], strict=False)
+                                hosts = list(ip.hosts())
+                                config["service"]["dhcp-server"]["default"]["pool"][ip.compressed] = {
+                                    "pool-name": iif["untagged_vlan"]["name"],
+                                    "gateway": {
+                                        addr["host"]: {}
+                                    },
+                                    "range": {
+                                        hosts[1].compressed: {
+                                            "to": hosts[-1].compressed
+                                        }
+                                    }
+                                }
 
                     ifaces[slugify(iif["name"])] = oif
 
