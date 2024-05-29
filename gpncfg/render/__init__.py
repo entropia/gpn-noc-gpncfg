@@ -65,7 +65,8 @@ class Renderer:
                 )
             else:
                 try:
-                    template = self.j2.get_template(usecase + ".j2")
+                    template_usecase = usecase if not usecase.startswith("access-switch_juniper_ex3300") else "access-switch_juniper_ex3300-48p"
+                    template = self.j2.get_template(template_usecase + ".j2")
                     cwc.config = template.render(cwc.context)
                 except jinja2.TemplateNotFound as e:
                     log.warn(
