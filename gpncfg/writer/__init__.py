@@ -31,6 +31,9 @@ class Writer(Action):
             for config in configs:
                 self.write_config(config)
 
+            if not self.cfg.daemon:
+                break
+
     def write_config(self, cwc):
         device = cwc.device
         serial = device["serial"]
@@ -88,6 +91,10 @@ class Cleaner(Action):
                 raise Exception(
                     "oldest file ({max_age}s) is older than max config age ({self.cfg.config_age}s), deleting must have gone wrong"
                 )
+
+            if not self.cfg.daemon:
+                break
+
             self.log.debug(f"sleeping for {wait} seconds")
             self.exit.wait(timeout=wait)
             self.honor_exit()
