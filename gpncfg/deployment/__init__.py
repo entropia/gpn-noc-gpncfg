@@ -228,9 +228,10 @@ class DeployJunos(DeployDriver):
                     session_log=session_log,
                     session_log_file_mode="append",
                 )
-            except netmiko.exceptions.NetmikoTimeoutException:
+            except netmiko.exceptions.NetmikoTimeoutException as e:
                 self.log.debug(
-                    f"failed to contact {addr}, trying next address if possible"
+                    f"failed to contact {addr}, trying next address if possible",
+                    exc_info=e,
                 )
         return None
 
