@@ -9,6 +9,8 @@ import configargparse
 import toml
 from danoan.toml_dataclass import TomlDataClassIO
 
+from ..logger import JsonFormatter
+
 # REMEMBER: only WARNING and higher levels are shown until logging is fully set
 # up later in `assemble`.
 log = logging.getLogger(__name__)
@@ -149,6 +151,11 @@ class ConfigProvider:
             "--log-level", default="INFO", help="verbosity of the logger"
         )
         parser.add_argument(
+            "--log-json-file",
+            default=False,
+            help="file to write json logs to",
+        )
+        parser.add_argument(
             "--motd",
             help="message of the day to be displayed on switch login",
             required=True,
@@ -252,6 +259,24 @@ class ConfigProvider:
         logging.getLogger("gql").setLevel(logging.WARNING)
         logging.getLogger("netmiko").setLevel(logging.INFO)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
+        if self.options.log_json_file:
+            self.options.log_json_file = os.path.expanduser(self.options.log_json_file)
+            logHandler = logging.FileHandler(self.options.log_json_file)
+            logHandler.setFormatter(
+                JsonFormatter(
+                    fmt_dict={
+                        "level": "levelname",
+                        "message": "message",
+                        "loggerName": "name",
+                        "processName": "processName",
+                        "processID": "process",
+                        "threadName": "threadName",
+                        "threadID": "thread",
+                        "timestamp": "asctime",
+                    }
+                )
+            )
+            logging.getLogger().addHandler(logHandler)
 
         self.options.cache_dir = os.path.expanduser(self.options.cache_dir)
         self.options.deploy_key = os.path.expanduser(self.options.deploy_key)
