@@ -12,6 +12,8 @@ import netmiko
 import requests
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
+from ..threadaction import Action
+
 log = logging.getLogger(__name__)
 
 # all nvue trainsitions that are valid
@@ -122,12 +124,6 @@ NT_SAVED = {
 }
 
 
-# like SystemExit and asyncio.exceptions.CancelledError, inherit from
-# BaseException. This way, the shutdown can not be confused with an error.
-class ShutdownCommencing(BaseException):
-    pass
-
-
 class IntangibleDeviceError(Exception):
     pass
 
@@ -140,19 +136,12 @@ class FailedStateError(Exception):
     pass
 
 
-class DeployDriver:
+class DeployDriver(Action):
     def __init__(self, cfg, exit, queue, id):
-        self.cfg = cfg
-        self.exit = exit
+        super().__init__(cfg, exit, f"worker#{id}")
         self.queue = queue
         self.id = id
         self.usecase = None
-        self.log = logging.getLogger(__name__).getChild(f"worker#{id}")
-
-    def honor_exit(self):
-        if self.exit.is_set():
-            self.log.debug("honoring shutdown request")
-            raise ShutdownCommencing()
 
     def assert_prop(self, device, name):
         old = self.__getattribute__(name)
@@ -188,20 +177,12 @@ class DeployDriver:
 
             self.log.debug(f"received new config: {cwc}")
 
-            self.assert_prop(cwc.context["device"], "usecase")
-            self.assert_prop(cwc.context["device"], "id")
+            self.assert_prop(cwc.device, "usecase")
+            self.assert_prop(cwc.device, "id")
 
             self.log = logging.getLogger(__name__).getChild(
-                "worker#{id}({nodename})".format(**cwc.context["device"])
+                "worker#{id}({nodename})".format(**cwc.device)
             )
-
-            serial = cwc.context["device"]["serial"]
-            self.log.debug("writing config for serial " + serial)
-            cwc.path = os.path.abspath(
-                os.path.join(self.cfg.output_dir, "config-" + serial)
-            )
-            with open(cwc.path, "w+") as file:
-                print(cwc.config, file=file)
 
             if self.cfg.no_deploy:
                 self.log.debug("as commanded, gpncfg shall not deploy to devices")
@@ -268,8 +249,15 @@ class DeployJunos(DeployDriver):
         )
 
     def deploy(self, cwc):
-        device = cwc.context["device"]
+        device = cwc.device
         self.log.debug("starting deployment")
+
+        serial = cwc.device["serial"]
+        self.log.debug("writing config for serial " + serial)
+        os.makedirs("/var/tmp/gpncfg", mode=0o751, exist_ok=True)
+        tmp = os.path.abspath(os.path.join("/var/tmp/gpncfg", "config-" + serial))
+        with open(tmp, "w+") as file:
+            print(cwc.config, file=file)
 
         netcon = self.connect_junos(device)
         if not netcon:
@@ -289,6 +277,11 @@ class DeployJunos(DeployDriver):
                 dest_file="gpncfg-upload.cfg",
                 overwrite_file=True,
             )
+
+        try:
+            os.remove(tmp)
+        except FileNotFoundError:
+            pass
 
         self.log.debug("config was successfuly uploaded, applying configuration")
         self.netcon_cfg_mode(netcon)
@@ -484,7 +477,7 @@ class DeployCumuls(DeployDriver):
         return None
 
     def deploy(self, cwc):
-        device = cwc.context["device"]
+        device = cwc.device
         self.log.debug("starting deployment")
 
         session = requests.Session()

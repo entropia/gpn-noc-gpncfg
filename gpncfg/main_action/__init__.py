@@ -3,6 +3,7 @@
 import logging
 import os
 import queue
+import shutil
 import threading
 import time
 from concurrent import futures
@@ -10,11 +11,12 @@ from pprint import pprint
 
 import gpncfg
 
-from .. import deployment
+from .. import deployment, threadaction
 from ..config import ConfigProvider
 from ..data_provider import DataProvider
 from ..fiddle import Fiddler
 from ..render import Renderer
+from ..writer import Cleaner, Writer
 
 log = logging.getLogger(__name__)
 
@@ -24,22 +26,30 @@ def run():
 
 
 def get_id_from_cwc(cwc):
-    return cwc.context["device"]["id"]
+    return cwc.device["id"]
 
 
 def shall_deploy(cwc):
-    return cwc.context["device"]["status"]["name"] in {"Active", "Staged"}
+    return cwc.device["status"]["name"] in {"Active", "Staged"}
 
 
 def log_worker_result(task):
     name = f"worker thread {task.id}"
     if exc := task.exception(0):
-        if isinstance(exc, deployment.ShutdownCommencing):
+        if isinstance(exc, threadaction.ShutdownCommencing):
             log.debug(f"{name} finished early after receiving a shutdown request")
         else:
             log.error(f"{name} encountered an error", exc_info=exc)
     else:
         log.debug(f"{name} completed with result {task.result(0)}")
+
+
+def log_action_result(task):
+    name = f"action thread {task.id}"
+    if exc := task.exception(0):
+        log.error(f"{name} encountered an error", exc_info=exc)
+    else:
+        log.error(f"{name} finished unexpectedly with result {task.result(0)}")
 
 
 class MainAction:
@@ -54,6 +64,8 @@ class MainAction:
 
         self.fiddler = Fiddler(self.cfg)
         self.renderer = Renderer(self.cfg)
+        self.writer = Writer(self.cfg, self.exit)
+        self.cleaner = Cleaner(self.cfg, self.exit)
 
         log.info("gpncfg greets gulli gulasch")
 
@@ -92,16 +104,23 @@ class MainAction:
         if self.cfg.populate_cache:
             return self.fetch_data()
 
-        futs = set()
+        futs_device = set()
+        futs_action = set()
         queues = dict()
         pool = futures.ThreadPoolExecutor()
         try:
+            self.writer.spawn(pool, futs_action, queues)
+            self.cleaner.spawn(pool, futs_action, queues)
             while True:
                 # wait for new data from nautobot
                 configs = self.fetch_data()
 
+                for action in ["action-writer", "action-cleaner"]:
+                    if q := queues.get(action):
+                        q.put(configs.values())
+
                 # create a set of device ids that we have threads for
-                current = set(fut.id for fut in futs)
+                current = set(fut.id for fut in futs_device)
 
                 # create a set of device ids that are supposed to be deployed
                 if self.cfg.limit:
@@ -120,7 +139,7 @@ class MainAction:
                     log.info(f"spawning workers for new devices {new}")
                 for id in new:
                     queues[id] = queue.Queue()
-                    usecase = configs[id].context["device"]["usecase"]
+                    usecase = configs[id].device["usecase"]
 
                     driver = deployment.DRIVERS.get(usecase)
                     if driver:
@@ -128,7 +147,7 @@ class MainAction:
                             driver(self.cfg, self.exit, queues[id], id).worker_loop
                         )
                         task.id = id
-                        futs.add(task)
+                        futs_device.add(task)
                     else:
                         missing_usecases.add(usecase)
 
@@ -146,7 +165,7 @@ class MainAction:
                     )
                     for id in old:
                         del queues[id]
-                        finished = futs.remove(id)
+                        finished = futs_device.remove(id)
 
                 # send new configs to devices
                 for cwc in configs.values():
@@ -155,7 +174,7 @@ class MainAction:
                         queues[id].put(cwc)
                     except KeyError:
                         text = "no deploy worker for device {nodename} serial {serial} id {id}".format(
-                            **cwc.context["device"]
+                            **cwc.device
                         )
                         if self.cfg.limit or not shall_deploy(cwc):
                             log.debug(text)
@@ -163,10 +182,17 @@ class MainAction:
                             log.error(text)
 
                 # handle finished or crashed threads
-                done, futs = futures.wait(futs, timeout=0)
-                for fut in done:
-                    del queues[fut.id]
+                done_device, futs_device = futures.wait(futs_device, timeout=0)
+                for fut in done_device:
                     log_worker_result(fut)
+                    del queues[fut.id]
+                done_action, futs_action = futures.wait(futs_action, timeout=0)
+                for fut in done_action:
+                    log_action_result(fut)
+                    del queues[fut.id]
+                if done_action:
+                    ids = set(fut.id for fut in done_action)
+                    raise Exception(f"some action threads finished unexpectedly {ids}")
 
                 # only loop in daemon mode
                 if not self.cfg.daemon:
@@ -182,8 +208,13 @@ class MainAction:
             )
             pool.shutdown(wait=False, cancel_futures=False)
             # wait for workers to finish and log their result
-            for fut in futures.as_completed(futs):
+            for fut in futures.as_completed(futs_device):
                 log_worker_result(fut)
+
+            try:
+                shutil.rmtree("/var/tmp/gpncfg")
+            except FileNotFoundError:
+                pass
         except (Exception, KeyboardInterrupt) as e:
             try:
                 # log why the main thread was interrupted
@@ -204,6 +235,8 @@ class MainAction:
                 )
 
                 # wait for workers to finish and log their result
+                futs = futs_device
+                futs.update(futs_action)
                 for fut in futures.as_completed(futs):
                     log_worker_result(fut)
 

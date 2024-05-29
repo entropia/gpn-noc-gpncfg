@@ -18,13 +18,24 @@ def get_template_path():
     return epath
 
 
-class ConfigWithContext:
+class Conglomerate:
     config: str
     context: dict()
+    device: dict()
+    path: str
+    config: str
 
-    def __init__(self):
-        self.config = None
+    def __init__(self, cfg, vlans, device):
+        self.cfg = cfg
+        self.device = device
         self.context = dict()
+        self.context["config"] = self.cfg.__dict__
+        self.context["vlans"] = vlans
+        self.context["device"] = device
+        self.config = None
+
+    def set_config(self, config):
+        self.config = config
 
 
 class Renderer:
@@ -54,19 +65,16 @@ class Renderer:
                     usecase=usecase,
                 )
             )
-            cwc = ConfigWithContext()
-            cwc.context["config"] = self.cfg.__dict__
-            cwc.context["vlans"] = data["vlans"]
-            cwc.context["device"] = device
+            cwc = Conglomerate(self.cfg, data["vlans"], device)
 
             if usecase == "core-switch_mellanox_sn2410":
-                cwc.config = json.dumps(
-                    [{"set": device["config"]}], indent=2, sort_keys=True
+                cwc.set_config(
+                    json.dumps([{"set": device["config"]}], indent=2, sort_keys=True)
                 )
             else:
                 try:
                     template = self.j2.get_template(usecase + ".j2")
-                    cwc.config = template.render(cwc.context)
+                    cwc.set_config(template.render(cwc.context))
                 except jinja2.TemplateNotFound as e:
                     log.warn(
                         "failed to find template {} for device {}".format(
