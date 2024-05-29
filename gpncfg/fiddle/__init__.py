@@ -166,6 +166,9 @@ class Fiddler:
 
                 config["system"]["hostname"] = device["nodename"]
                 config["system"]["message"] = {"pre-login": device["motd"]}
+                config["service"]["snmp-server"]["readonly-community"] = {
+                    self.cfg.snmp_community: {"access": {"any": {}}}
+                }
 
                 if device["nodename"] == "cumulus-test":
                     config["system"]["ssh-server"]["strict"] = "disabled"

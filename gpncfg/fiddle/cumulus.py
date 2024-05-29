@@ -51,13 +51,7 @@ CUMULUS_CONFIG = {
                 "all": {},
                 "all-v6": {},
             },
-            "readonly-community": {
-                "b33c11c5a0914eb4b3b755334b9c68ca": {
-                    "access": {
-                        "any": {},
-                    },
-                },
-            },
+            "readonly-community": {},
         },
     },
     "router": {
