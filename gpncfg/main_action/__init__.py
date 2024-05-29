@@ -190,7 +190,7 @@ class MainAction:
                 for fut in done_action:
                     log_action_result(fut)
                     del queues[fut.id]
-                if done_action:
+                if self.cfg.daemon and done_action:
                     ids = set(fut.id for fut in done_action)
                     raise Exception(f"some action threads finished unexpectedly {ids}")
 
@@ -208,7 +208,9 @@ class MainAction:
             )
             pool.shutdown(wait=False, cancel_futures=False)
             # wait for workers to finish and log their result
-            for fut in futures.as_completed(futs_device):
+            futs = futs_device
+            futs.update(futs_action)
+            for fut in futures.as_completed(futs):
                 log_worker_result(fut)
 
             try:

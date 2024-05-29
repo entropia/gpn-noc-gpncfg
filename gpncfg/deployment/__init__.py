@@ -175,6 +175,10 @@ class DeployDriver(Action):
                     self.log.debug(f"skipped {i} outdated configs")
                     break
 
+            if not cwc.config:
+                self.log.warning("config was not rendered, waiting for new config")
+                continue
+
             self.log.debug(f"received new config: {cwc}")
 
             self.assert_prop(cwc.device, "usecase")
