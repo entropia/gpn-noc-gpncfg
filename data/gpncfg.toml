@@ -1,6 +1,7 @@
 [gpncfg]
 nautobot-url = "https://nautobot.example.tld"
 snmp-community = "fill me"
+syslog-server = "fill me"
 nautobot-token = "fill me"
 login-file = "~/.config/gpncfg/login.toml"
 nvue-pass = "fill me"

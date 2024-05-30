@@ -47,6 +47,11 @@ system {
         file interactive-commands {
             interactive-commands any;
         }
+{% if config["syslog_server"] %}
+        host {{ config["syslog_server"] }} {
+            any any;
+        }
+{% endif %}
     }
 }
 chassis {
