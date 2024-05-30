@@ -28,10 +28,6 @@ def get_id_from_cwc(cwc):
     return cwc.device["id"]
 
 
-def shall_deploy(cwc):
-    return cwc.device["status"]["name"] in {"Active", "Staged"}
-
-
 def log_worker_result(task):
     name = f"worker thread {task.id}"
     if exc := task.exception(0):
@@ -122,7 +118,7 @@ class MainAction:
                     active = set(
                         get_id_from_cwc(cwc)
                         for cwc in configs.values()
-                        if shall_deploy(cwc)
+                        if cwc.device["deploy"]
                     )
 
                 # start worker routines for new devices
@@ -168,7 +164,7 @@ class MainAction:
                         text = "no deploy worker for device {nodename} serial {serial} id {id}".format(
                             **cwc.device
                         )
-                        if self.cfg.limit or not shall_deploy(cwc):
+                        if self.cfg.limit or not cwc.device["deploy"]:
                             log.debug(text)
                         else:
                             log.error(text)

@@ -67,6 +67,11 @@ class Fiddler:
             request_id = data["object_changes"][0]["request_id"]
             device["motd"] = self.cfg.motd.format(timestamp=ts, request_id=request_id)
 
+            device["deploy"] = device["status"]["name"] in {"Active", "Staged"}
+            for tag in device["tags"]:
+                if tag["name"] == "gpncfg-no-deploy":
+                    device["deploy"] = False
+
             try:
                 device["gateway"] = device["primary_ip4"]["parent"]["rel_gateway"][
                     "host"
