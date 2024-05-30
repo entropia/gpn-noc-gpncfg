@@ -151,6 +151,7 @@ protocols {
 ethernet-switching-options {
     secure-access-port {
         {% for iface in device["physical_interfaces"] %}
+        {% if not iface["mgmt_only"] %}
         interface {{ iface["name"] }}.0 {
             {% if iface["_custom_field_data"].get("trusted", False) %}
             dhcp-trusted;
@@ -158,6 +159,7 @@ ethernet-switching-options {
             no-dhcp-trusted;
             {% endif %}
         }
+        {% endif %}
         {% endfor %}
     }
     storm-control {
