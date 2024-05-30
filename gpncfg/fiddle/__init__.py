@@ -244,7 +244,11 @@ class Fiddler:
                             oneigh[iif["name"]] = UNNUMBERED_BGP
                         elif tag["name"] == "send router advertisements":
                             oif["ip"]["neighbor-discovery"] = {
-                                "router-advertisement": {"enable": "on"}
+                                "router-advertisement": {"enable": "on"},
+                                "rdnss": {
+                                    "2a0e:c5c1:0:10::7": {},
+                                    "2a0e:c5c1:0:10::8": {},
+                                },
                             }
                         elif tag["name"] == "dhcp server":
                             for addr in iif["ip_addresses"]:
