@@ -383,13 +383,13 @@ class DeployCumuls(DeployDriver):
                 )
             elif state in target:
                 self.log.debug(f"reached target state {state}")
-                return ("ok", res, state)
+                return "ok", res, state
             elif timeout and time.time() - start > timeout:
                 self.log.debug(f"reached timeout, latest state is '{state}'")
-                return ("timeout", res, state)
+                return "timeout", res, state
             elif state not in good:
                 self.log.debug(f"got new state '{state}'")
-                return ("new state", res, state)
+                return "new state", res, state
             time.sleep(1)
 
     def cancel_revision(self, base, session, rev):
