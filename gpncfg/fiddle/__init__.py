@@ -195,6 +195,10 @@ class Fiddler:
 
                     if iaddrs := iif["ip_addresses"]:
                         oif["ip"] = {"address": {}}
+
+                        if iif["name"].startswith("eth"):
+                            oif["ip"]["vrf"] = "mgmt"
+
                         if iif["_custom_field_data"].get("dhcp_client", False):
                             oif["ip"]["address"] = {"dhcp": {}}
                         else:
