@@ -52,6 +52,12 @@ def log_action_result(task):
         log.error(f"{name} finished unexpectedly with result {task.result(0)}")
 
 
+class Alive:
+    def __init__(self, id):
+        self.id = id
+        self.event = threading.Event()
+
+
 class MainAction:
     def __init__(self):
         logging.getLogger().addHandler(gpncfg.color_handler())
@@ -107,7 +113,8 @@ class MainAction:
         futs_device = set()
         futs_action = set()
         queues = dict()
-        pool = futures.ThreadPoolExecutor()
+        pool = futures.ThreadPoolExecutor(max_workers=999)
+        alives = list()
         try:
             self.writer.spawn(pool, futs_action, queues)
             self.cleaner.spawn(pool, futs_action, queues)
@@ -143,11 +150,20 @@ class MainAction:
 
                     driver = deployment.DRIVERS.get(usecase)
                     if driver:
+                        alive = Alive(id)
                         task = pool.submit(
-                            driver(self.cfg, self.exit, queues[id], id).worker_loop
+                            driver(
+                                self.cfg, self.exit, queues[id], id, alive.event
+                            ).worker_loop
                         )
                         task.id = id
                         futs_device.add(task)
+                        alives.append(alive)
+                        alive.event.wait(timeout=5)
+                        if not alive.event.is_set():
+                            raise Exception(
+                                f"wtf why did the worker not start within 5 seconds: {id}, we know about {len(futs_device)} + action threads"
+                            )
                     else:
                         missing_usecases.add(usecase)
 
@@ -182,6 +198,10 @@ class MainAction:
                 if self.cfg.daemon and done_action:
                     ids = set(fut.id for fut in done_action)
                     raise Exception(f"some action threads finished unexpectedly {ids}")
+
+                for alive in alives:
+                    if not alive.event.is_set():
+                        log.warning(f"alive event for worker {alive.id} not set yet")
 
                 # only loop in daemon mode
                 if not self.cfg.daemon:
