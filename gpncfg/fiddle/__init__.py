@@ -218,6 +218,8 @@ class Fiddler:
                                         oif["ip"]["gateway"] = {ver[0]: {}}
 
                             oif["ip"]["address"] = oaddrs
+                    elif iif["name"].startswith("eth"):
+                        oif["ip"] = {"vrf": "mgmt"}
 
                     if iif["type"] == "LAG":
                         oif["type"] = "bond"
