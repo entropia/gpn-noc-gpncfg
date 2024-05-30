@@ -2,10 +2,10 @@
 
 import copy
 import datetime
+import ipaddress
 import json
 import logging
 import os
-import ipaddress
 from pprint import pprint
 
 import jinja2
@@ -195,7 +195,7 @@ class Fiddler:
 
                     if iaddrs := iif["ip_addresses"]:
                         oif["ip"] = {"address": {}}
-                        if iif["_custom_field_data"]["dhcp_client"]:
+                        if iif["_custom_field_data"].get("dhcp_client", False):
                             oif["ip"]["address"] = {"dhcp": {}}
                         else:
                             oaddrs = dict()
@@ -244,18 +244,20 @@ class Fiddler:
                             for addr in iif["ip_addresses"]:
                                 if addr["ip_version"] != 4:
                                     continue
-                                ip = ipaddress.IPv4Network(addr["address"], strict=False)
+                                ip = ipaddress.IPv4Network(
+                                    addr["address"], strict=False
+                                )
                                 hosts = list(ip.hosts())
-                                config["service"]["dhcp-server"]["default"]["pool"][ip.compressed] = {
+                                config["service"]["dhcp-server"]["default"]["pool"][
+                                    ip.compressed
+                                ] = {
                                     "pool-name": iif["untagged_vlan"]["name"],
-                                    "gateway": {
-                                        addr["host"]: {}
-                                    },
+                                    "gateway": {addr["host"]: {}},
                                     "range": {
                                         hosts[1].compressed: {
                                             "to": hosts[-1].compressed
                                         }
-                                    }
+                                    },
                                 }
 
                     ifaces[slugify(iif["name"])] = oif
