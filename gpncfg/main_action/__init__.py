@@ -238,7 +238,9 @@ class MainAction:
                     log.info("received ^C, attempting clean shutdown.")
 
                 # tell worker threads to exit
-                pool.shutdown(wait=False, cancel_futures=True)
+                log.debug("waiting for 6 minutes for workers to exit")
+                pool.shutdown(wait=360, cancel_futures=True)
+                log.debug("thread pool was sucessfully shut down")
                 self.exit.set()
 
                 log.info(
