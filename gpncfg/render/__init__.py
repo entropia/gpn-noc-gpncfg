@@ -74,7 +74,7 @@ class Renderer:
 
             template_name = TEMPLATE_MAP.get(usecase)
             if not template_name:
-                log.warn(
+                log.warning(
                     "failed to find template for usecase {} when rendering {nodename} {serial}".format(
                         usecase, **device
                     )

@@ -72,7 +72,7 @@ class Fiddler:
                 ]
             except TypeError as e:
                 if device["role"]["name"] == "access":
-                    log.warn(
+                    log.warning(
                         "access device has no gateway {nodename} {serial})".format(
                             **device
                         )
@@ -110,7 +110,7 @@ class Fiddler:
 
                     if iface["type"] == "VIRTUAL":
                         if iface["untagged_vlan"] is None:
-                            log.warn(
+                            log.warning(
                                 "virtual interface '{}' with no untagged vid on device '{}' serial '{}'".format(
                                     iface["name"],
                                     device["name"],
