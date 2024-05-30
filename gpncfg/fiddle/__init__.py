@@ -59,7 +59,7 @@ class Fiddler:
             log.debug("fiddling config for serial {}'".format(device["serial"]))
 
             # add general stuff
-            if (name := device["name"]) != None:
+            if (name := device["name"]) is not None:
                 device["nodename"] = slugify(name)
             else:
                 device["nodename"] = "device-" + device["id"]

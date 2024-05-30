@@ -222,7 +222,7 @@ class DataProvider:
             cache_file = self.get_latest_cache_path()
         log.info(f"fetching device information from cache at '{cache_file}'")
 
-        if cache_file == None:
+        if cache_file is None:
             log.fatal(
                 "running in offline mode but no cached queries were found, exiting"
             )
@@ -248,13 +248,13 @@ class DataProvider:
         return hashlib.sha256(text.encode()).hexdigest()
 
     def hash_last(self):
-        if self.last_hash != None:
+        if self.last_hash is not None:
             log.debug("data provider's last_hash already populated, skipping")
             return
 
         log.debug("data provider's last_hash not yet populated, hashing latest cache")
         last_path = self.get_latest_cache_path()
-        if last_path == None:
+        if last_path is None:
             log.debug("no previous cache found, therefore not hashing it")
             self.last_hash = False
             return
