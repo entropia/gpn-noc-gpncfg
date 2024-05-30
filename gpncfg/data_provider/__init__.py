@@ -53,6 +53,7 @@ class DataProvider:
                     %(tenant)s
                 ) {
                     name,
+                    tags { name },
                     status { name },
                     id,
                     serial,
