@@ -109,9 +109,8 @@ class MainAction:
                 # wait for new data from nautobot
                 configs = self.fetch_data()
 
-                for action in ["action-writer", "action-cleaner"]:
-                    if q := queues.get(action):
-                        q.put(configs.values())
+                if q := queues.get("action-writer"):
+                    q.put(configs.values())
 
                 # create a set of device ids that we have threads for
                 current = set(fut.id for fut in futs_device)
