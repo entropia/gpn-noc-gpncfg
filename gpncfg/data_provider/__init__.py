@@ -42,6 +42,9 @@ class DataProvider:
         query = gql.gql(
             """
             query {
+                object_changes(limit:1) {
+                    request_id
+                }
                 devices(
                     status: ["Active","Staged","Planned"]
                     manufacturer: ["Juniper", "Mellanox"]
