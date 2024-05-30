@@ -8,7 +8,7 @@ system {
         {% for user in config["login"]["user"] %}
         user {{ user["name"] }} {
             uid {{ user["uid"] }};
-            class super-user;
+            class {{ user["role"] | default("super-user") }};
             {% if user["ecdsa"] or user["ed25519"] or user["rsa"] %}
             authentication {
                 {% for type in ["ecdsa", "ed25519", "rsa"] %}
@@ -18,18 +18,6 @@ system {
                 {% endfor %}
             }
             {% endif %}
-        }
-        {% endfor %}
-        {% for user in config.get("login", {}).get("monitoring_user", []) %}
-        user {{ user["name"] }} {
-            class read-only;
-            authentication {
-                {% for type in ["ecdsa", "ed25519", "rsa"] %}
-                {% for key in user[type] %}
-                ssh-{{ type }} "{{ key }}";
-                {% endfor %}
-                {% endfor %}
-            }
         }
         {% endfor %}
     }
