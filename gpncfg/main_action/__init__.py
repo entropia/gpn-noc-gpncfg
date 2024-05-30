@@ -207,8 +207,11 @@ class MainAction:
             # wait for workers to finish and log their result
             futs = futs_device
             futs.update(futs_action)
-            for fut in futures.as_completed(futs):
+            start = time.time()
+            for fut in futures.as_completed(futs, timeout=300):
                 log_worker_result(fut)
+                if time.time() - start > 360:
+                    raise TimeoutError("worker thread took too long to complete")
 
             try:
                 shutil.rmtree("/var/tmp/gpncfg")
@@ -238,8 +241,11 @@ class MainAction:
                 # wait for workers to finish and log their result
                 futs = futs_device
                 futs.update(futs_action)
-                for fut in futures.as_completed(futs):
+                start = time.time()
+                for fut in futures.as_completed(futs, timeout=300):
                     log_worker_result(fut)
+                    if time.time() - start > 360:
+                        raise TimeoutError("worker thread took too long to complete")
 
                 log.info(
                     "all workers exited cleanly. gpncfg knows it will join them soon"
