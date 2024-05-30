@@ -20,7 +20,18 @@ system {
             {% endif %}
         }
         {% endfor %}
-
+        {% for user in config.get("login", {}).get("monitoring_user", []) %}
+        user {{ user["name"] }} {
+            class read-only;
+            authentication {
+                {% for type in ["ecdsa", "ed25519", "rsa"] %}
+                {% for key in user[type] %}
+                ssh-{{ type }} "{{ key }}";
+                {% endfor %}
+                {% endfor %}
+            }
+        }
+        {% endfor %}
     }
     services {
         ssh {
