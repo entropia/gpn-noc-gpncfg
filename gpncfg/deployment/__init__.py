@@ -155,7 +155,7 @@ class DeployDriver(Action):
     def deploy(self, cwc):
         raise NotImplementedError()
 
-    def worker_loop(self):
+    def worker_loop(self, _):
         self.log.debug("hello world")
         self.alive.set()
         self.log.debug("alive set")

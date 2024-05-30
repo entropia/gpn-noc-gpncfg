@@ -141,7 +141,8 @@ class MainAction:
                         task = pool.submit(
                             driver(
                                 self.cfg, self.exit, queues[id], id, alive.event
-                            ).worker_loop
+                            ).worker_loop,
+                            None,
                         )
                         task.id = id
                         futs_device.add(task)

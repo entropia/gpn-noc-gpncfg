@@ -27,3 +27,6 @@ class Action:
         task.id = self.name
         queues[self.name] = q
         futs_action.add(task)
+
+    def worker_loop(self, q):
+        raise NotImplementedError()
