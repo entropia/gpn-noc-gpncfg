@@ -83,6 +83,7 @@ class DataProvider:
                     }
                     interfaces {
                         name,
+                        mgmt_only,
                         tags {
                             name
                         }
