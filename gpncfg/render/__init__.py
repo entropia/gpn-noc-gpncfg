@@ -33,14 +33,15 @@ class Conglomerate:
     path: str
     config: str
 
-    def __init__(self, cfg, vlans, device):
+    def __init__(self, cfg, data, device):
         self.cfg = cfg
         self.device = device
         self.context = dict()
         self.context["config"] = self.cfg.__dict__
-        self.context["vlans"] = vlans
+        self.context["vlans"] = data["vlans"]
         self.context["device"] = device
         self.config = None
+        self.data = data
 
     def set_config(self, config):
         self.config = config
@@ -73,7 +74,7 @@ class Renderer:
                     usecase=usecase,
                 )
             )
-            cwc = Conglomerate(self.cfg, data["vlans"], device)
+            cwc = Conglomerate(self.cfg, data, device)
 
             template_name = TEMPLATE_MAP.get(usecase)
             if not template_name:
