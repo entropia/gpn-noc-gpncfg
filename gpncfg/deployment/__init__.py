@@ -324,11 +324,14 @@ class DeployJunos(DeployDriver):
             return True
 
         if not self.cfg.dry_deploy:
-            self.netcon_cmd(
-                netcon,
-                "commit confirmed {}".format(self.cfg.rollback_timeout),
-                read_timeout=300,
-            )
+            try:
+                self.netcon_cmd(
+                    netcon,
+                    "commit confirmed {}".format(self.cfg.rollback_timeout),
+                    read_timeout=300,
+                )
+            except ReadTimeout:
+                pass
         self.log.info("config uploaded and commited, now reconnecting to confirm")
 
         netcon.disconnect()
