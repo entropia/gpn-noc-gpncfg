@@ -247,9 +247,7 @@ class MainAction:
                     if time.time() - start > 360:
                         raise TimeoutError("worker thread took too long to complete")
 
-                log.info(
-                    "all workers exited cleanly. gpncfg knows it will join them soon"
-                )
+                log.info("all workers exited. gpncfg knows it will join them soon")
 
                 # exit with non zero code if the main loop got interrupted by an error
                 if isinstance(e, Exception):
