@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 CUMULUS_CONFIG = {
-    "bridge": {"domain": {"br_default": {"vlan": {}}}},
+    "bridge": {"domain": {"br_default": {"vlan": {}, "stp": {}}}},
     "interface": {},
     "system": {
         "aaa": {"user": {}},
