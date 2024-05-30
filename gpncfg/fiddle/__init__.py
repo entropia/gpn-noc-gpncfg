@@ -208,7 +208,7 @@ class Fiddler:
                                 except TypeError:
                                     pass
 
-                            if iif["_custom_field_data"]["set_gateway"]:
+                            if iif["_custom_field_data"].get("set_gateway", False):
                                 for ver in ogateways.values():
                                     if ver:
                                         oif["ip"]["gateway"] = {ver[0]: {}}
