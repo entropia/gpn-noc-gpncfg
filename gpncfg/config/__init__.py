@@ -3,10 +3,8 @@ import logging
 import os
 import sys
 from dataclasses import dataclass
-from pprint import pprint
 
 import configargparse
-import toml
 from danoan.toml_dataclass import TomlDataClassIO
 
 from ..logger import JsonFormatter

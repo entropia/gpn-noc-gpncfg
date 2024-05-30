@@ -4,8 +4,6 @@ import logging
 
 import colorlog
 
-from .main_action import run
-
 log = logging.getLogger(__name__)
 
 

@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import json
 import logging
@@ -6,7 +5,6 @@ import os
 import queue
 import sys
 import time
-from pprint import pprint
 
 import netmiko
 import requests
