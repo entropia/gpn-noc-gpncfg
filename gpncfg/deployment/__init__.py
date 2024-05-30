@@ -156,7 +156,6 @@ class DeployDriver(Action):
         raise NotImplementedError()
 
     def worker_loop(self):
-        cwc = None
         self.log.debug("hello world")
         self.alive.set()
         self.log.debug("alive set")
@@ -393,7 +392,7 @@ class DeployCumuls(DeployDriver):
 
     def cancel_revision(self, base, session, rev):
         self.log.debug(f"cancelling revision {rev}")
-        res = session.patch(
+        session.patch(
             f"{base}/revision/{rev}",
             data=json.dumps(
                 {
@@ -402,7 +401,7 @@ class DeployCumuls(DeployDriver):
                 }
             ),
         )
-        res = session.patch(
+        session.patch(
             f"{base}/revision/{rev}",
             data=json.dumps(
                 {
