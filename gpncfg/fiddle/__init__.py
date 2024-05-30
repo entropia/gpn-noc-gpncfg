@@ -274,7 +274,18 @@ class Fiddler:
                     vlanstr = ",".join(str(vlan) for vlan in vlans)
                     config["bridge"]["domain"]["br_default"]["vlan"][vlanstr] = {}
                 else:
-                    del config["bridge"]
+                    del config["bridge"]["domain"]["br_default"]["vlan"]
+
+                stp_priority = device["_custom_field_data"].get(
+                    "spanning_tree_priority"
+                )
+                if not stp_priority:
+                    stp_priority = 4
+                # no, .get alone is not enough, since nautobot can also contain a Null value here
+
+                config["bridge"]["domain"]["br_default"]["stp"]["priority"] = (
+                    stp_priority * 4096
+                )
 
                 ousers = dict()
 

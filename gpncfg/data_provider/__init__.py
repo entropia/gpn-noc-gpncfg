@@ -148,6 +148,7 @@ class DataProvider:
                        ip_version
                        prefix
                    }
+                   _custom_field_data
                 },
                 vlans(
                     status:"Active"
