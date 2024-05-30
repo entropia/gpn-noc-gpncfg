@@ -64,6 +64,7 @@ interfaces {
         {% if iface["mode"] in ["TAGGED", "TAGGED_ALL"] %}
         native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
         {% endif %}
+        {% if iface["mgmt_only"] %}
         unit 0 {
             family ethernet-switching {
             {% if iface["mode"] == "ACCESS" %}
@@ -84,6 +85,7 @@ interfaces {
             {% endif %}
             }
         }
+        {% endif %}
     }
     {% endfor %}
     irb {
@@ -123,7 +125,7 @@ protocols {
     }
     rstp {
         {% for iface in device["physical_interfaces"] %}
-            {% if iface["name"] != "vme" %}
+            {% if iface["mgmt_only"] %}
             {% if iface["_custom_field_data"].get("trusted", False) %}
         interface {{ iface["name"] }};
             {% else %}

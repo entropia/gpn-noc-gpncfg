@@ -61,6 +61,7 @@ interfaces {
     {% for iface in device["physical_interfaces"] %}
     {{ iface["name"] }} {
         mtu 9014;
+        {% if iface["mgmt_only"] %}
         unit 0 {
             family ethernet-switching {
             {% if iface["mode"] == "ACCESS" %}
@@ -83,6 +84,7 @@ interfaces {
             {% endif %}
             }
         }
+        {% endif %}
     }
     {% endfor %}
     vlan {
@@ -122,7 +124,7 @@ protocols {
     }
     rstp {
         {% for iface in device["physical_interfaces"] %}
-            {% if iface["name"] != "me0" %}
+            {% if iface["mgmt_only"] %}
             {% if iface["_custom_field_data"].get("trusted", False) %}
         interface {{ iface["name"] }}.0;
             {% else %}
@@ -169,10 +171,12 @@ vlans {
 }
 poe {
 {% for iface in device["physical_interfaces"] %}
+{% if iface["mgmt_only"] %}
     {% if iface["_custom_field_data"].get("poe", False) %}
         interface {{ iface["name"] }};
     {% else %}
         # interface {{ iface["name"] }};
     {% endif %}
+{% endif %}
 {% endfor %}
 }
