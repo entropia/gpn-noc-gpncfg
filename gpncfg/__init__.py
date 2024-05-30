@@ -4,6 +4,9 @@ import logging
 
 import colorlog
 
+# required for the gpncfg command to work
+from .main_action import run
+
 log = logging.getLogger(__name__)
 
 
