@@ -152,6 +152,9 @@ class DeployDriver(Action):
                 f"my {name} changed from '{old}' to '{new}', refusing to continue"
             )
 
+    def deploy(self, cwc):
+        raise NotImplementedError()
+
     def worker_loop(self):
         cwc = None
         self.log.debug("hello world")
