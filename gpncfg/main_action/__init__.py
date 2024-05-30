@@ -113,7 +113,7 @@ class MainAction:
         futs_device = set()
         futs_action = set()
         queues = dict()
-        pool = futures.ThreadPoolExecutor()
+        pool = futures.ThreadPoolExecutor(max_workers=999)
         alives = list()
         try:
             self.writer.spawn(pool, futs_action, queues)
