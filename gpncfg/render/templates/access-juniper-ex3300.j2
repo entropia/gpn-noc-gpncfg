@@ -122,6 +122,7 @@ protocols {
     }
     rstp {
         {% for iface in device["physical_interfaces"] %}
+            {% if iface["name"] != "me0" %}
             {% if iface["_custom_field_data"].get("trusted", False) %}
         interface {{ iface["name"] }}.0;
             {% else %}
@@ -129,6 +130,7 @@ protocols {
             edge;
             no-root-port;
         }
+            {% endif %}
             {% endif %}
         {% endfor %}
     }
