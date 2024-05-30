@@ -94,18 +94,6 @@ class MainAction:
         data = self.fiddler.fiddle(dp.data)
         return self.renderer.render(data)
 
-    def wait_for_workers(self, workers):
-        # wait for workers to finish and log their result
-        try:
-            for fut in futures.as_completed(futs):
-                log_worker_result(fut)
-        except (Exception, KeyboardInterrupt) as e:
-            log.fatal(
-                "main thread encountered error while trying to exit, force exiting now",
-                exc_info=e,
-            )
-            os._exit(1)
-
     def run(self):
         if self.cfg.populate_cache:
             return self.fetch_data()
