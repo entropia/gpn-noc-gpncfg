@@ -9,6 +9,7 @@ import time
 from concurrent import futures
 
 import gpncfg
+
 from .. import deployment, threadaction
 from ..config import ConfigProvider
 from ..data_provider import DataProvider
