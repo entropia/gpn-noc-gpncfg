@@ -1,9 +1,7 @@
-import json
 import logging
 import os
 import queue
 import time
-from pprint import pprint
 
 from ..threadaction import Action
 

@@ -7,10 +7,8 @@ import shutil
 import threading
 import time
 from concurrent import futures
-from pprint import pprint
 
 import gpncfg
-
 from .. import deployment, threadaction
 from ..config import ConfigProvider
 from ..data_provider import DataProvider

@@ -5,10 +5,6 @@ import datetime
 import ipaddress
 import json
 import logging
-import os
-from pprint import pprint
-
-import jinja2
 
 from .cumulus import CUMULUS_CONFIG, UNNUMBERED_BGP
 

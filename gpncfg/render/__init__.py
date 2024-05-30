@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
-import copy
-import datetime
 import json
 import logging
 import os
-from pprint import pprint
 
 import jinja2
 

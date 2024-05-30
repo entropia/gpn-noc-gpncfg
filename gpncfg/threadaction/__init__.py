@@ -1,8 +1,5 @@
-import json
 import logging
-import os
 import queue
-from pprint import pprint
 
 log = logging.getLogger(__name__)
 
