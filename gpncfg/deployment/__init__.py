@@ -290,7 +290,7 @@ class DeployJunos(DeployDriver):
             netmiko.file_transfer(
                 netcon,
                 source_file=cwc.path,
-                dest_file="gpncfg-upload.cfg",
+                dest_file="gpncfg-upload-new-uid.cfg",
                 overwrite_file=True,
             )
 
@@ -303,7 +303,7 @@ class DeployJunos(DeployDriver):
         self.netcon_cfg_mode(netcon)
 
         if not self.cfg.dry_deploy:
-            self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload.cfg")
+            self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload-new-uid.cfg")
 
         if self.is_change_more_than_motd(netcon):
             self.log.debug(
