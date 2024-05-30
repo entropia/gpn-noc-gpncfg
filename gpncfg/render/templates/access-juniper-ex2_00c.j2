@@ -163,11 +163,11 @@ vlans {
                     overrides {
                         trusted;
                     }
-		    {% for iface in device["physical_interfaces"] %}
-	                {% if iface["_custom_field_data"].get("trusted", False) %}
+                    {% for iface in device["physical_interfaces"] %}
+                        {% if iface["_custom_field_data"].get("trusted", False) and not iface["mgmt_only"] %}
                     interface {{ iface["name"] }}.0;
-		        {% endif %}
-		    {% endfor %}
+                        {% endif %}
+                    {% endfor %}
                 }
             }
         }
