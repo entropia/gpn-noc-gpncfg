@@ -336,7 +336,6 @@ class DeployJunos(DeployDriver):
             self.log.error(
                 "failed connecting to commit configuration, no more addresses to try"
             )
-            netcon.disconnect()
             return False
 
         self.log.debug("device is still reachable, committing configuration")
