@@ -125,7 +125,7 @@ protocols {
     }
     rstp {
         {% for iface in device["physical_interfaces"] %}
-            {% if iface["_custom_field_data"]["trusted"] %}
+            {% if iface["_custom_field_data"].get("trusted", False) %}
         interface {{ iface["name"] }};
             {% else %}
         interface {{ iface["name"] }} {
@@ -162,7 +162,7 @@ vlans {
                         trusted;
                     }
 		    {% for iface in device["physical_interfaces"] %}
-	                {% if iface["_custom_field_data"]["trusted"] %}
+	                {% if iface["_custom_field_data"].get("trusted", False) %}
                     interface {{ iface["name"] }}.0;
 		        {% endif %}
 		    {% endfor %}
@@ -174,7 +174,7 @@ vlans {
 }
 poe {
 {% for iface in device["physical_interfaces"] %}
-    {% if iface["_custom_field_data"]["poe"] %}
+    {% if iface["_custom_field_data"].get("poe", False) %}
         interface {{ iface["name"] }};
     {% else %}
         # interface {{ iface["name"] }};

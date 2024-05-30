@@ -122,7 +122,7 @@ protocols {
     }
     rstp {
         {% for iface in device["physical_interfaces"] %}
-            {% if iface["_custom_field_data"]["trusted"] %}
+            {% if iface["_custom_field_data"].get("trusted", False) %}
         interface {{ iface["name"] }}.0;
             {% else %}
         interface {{ iface["name"] }}.0 {
@@ -143,7 +143,7 @@ ethernet-switching-options {
     secure-access-port {
         {% for iface in device["physical_interfaces"] %}
         interface {{ iface["name"] }}.0 {
-            {% if iface["_custom_field_data"]["trusted"] %}
+            {% if iface["_custom_field_data"].get("trusted", False) %}
             dhcp-trusted;
             {% else %}
             no-dhcp-trusted;
@@ -167,7 +167,7 @@ vlans {
 }
 poe {
 {% for iface in device["physical_interfaces"] %}
-    {% if iface["_custom_field_data"]["poe"] %}
+    {% if iface["_custom_field_data"].get("poe", False) %}
         interface {{ iface["name"] }};
     {% else %}
         # interface {{ iface["name"] }};
