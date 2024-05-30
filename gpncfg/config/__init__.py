@@ -223,6 +223,10 @@ class ConfigProvider:
             required=True,
         )
         parser.add_argument(
+            "--syslog-server",
+            help="the syslog server for the devices",
+        )
+        parser.add_argument(
             "--use-cache",
             help="do not fetch new data from nautobot",
             action="store_true",
