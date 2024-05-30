@@ -75,6 +75,7 @@ def refuse_secret_on_cli(args, name):
 
 class ConfigProvider:
     def __init__(self):
+        self.options = None
         self.config = ()
 
     def collect(self):
