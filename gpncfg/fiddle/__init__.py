@@ -68,7 +68,8 @@ class Fiddler:
             else:
                 device["nodename"] = "device-" + device["id"]
 
-            device["motd"] = self.cfg.motd.format(timestamp=ts)
+            request_id = data["object_changes"][0]["request_id"]
+            device["motd"] = self.cfg.motd.format(timestamp=ts, request_id=request_id)
 
             try:
                 device["gateway"] = device["primary_ip4"]["parent"]["rel_gateway"][
