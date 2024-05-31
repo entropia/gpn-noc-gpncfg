@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from dataclasses import dataclass
+from typing import List
 
 import configargparse
 from danoan.toml_dataclass import TomlDataClassIO
@@ -26,9 +27,9 @@ class UserInfo(TomlDataClassIO):
     uid: int
     name: str
     password: str
-    ecdsa: [str]
-    ed25519: [str]
-    rsa: [str]
+    ecdsa: List[str]
+    ed25519: List[str]
+    rsa: List[str]
 
 
 @dataclass
