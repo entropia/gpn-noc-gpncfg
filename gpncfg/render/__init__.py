@@ -24,11 +24,10 @@ def get_template_path():
 
 
 class Conglomerate:
-    config: str
+    config: str | None
     context: dict
     device: dict
     path: str
-    config: str | None
 
     def __init__(self, cfg, data, device):
         self.cfg = cfg
