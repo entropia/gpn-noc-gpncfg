@@ -65,9 +65,7 @@ class Renderer:
 
             log.debug(
                 "rendering config for serial {serial}".format(
-                    name=device["name"],
                     serial=device["serial"],
-                    usecase=usecase,
                 )
             )
             cwc = Conglomerate(self.cfg, data, device)
