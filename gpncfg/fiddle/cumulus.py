@@ -29,7 +29,7 @@ CUMULUS_CONFIG = {
         "dns": {
             "default": {
                 "search": {
-                  "noc.gulas.ch": {},
+                    "noc.gulas.ch": {},
                 },
                 "server": {
                     "151.216.64.55": {},
