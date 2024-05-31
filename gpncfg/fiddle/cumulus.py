@@ -28,11 +28,14 @@ CUMULUS_CONFIG = {
     "service": {
         "dns": {
             "default": {
+                "search": {
+                    "noc.gulas.ch": {},
+                },
                 "server": {
-                    # https://libreops.cc/radicaldns.html server 1
-                    "2a01:4f8:1c0c:82c0::1": {},
-                    # https://libreops.cc/radicaldns.html server 2
-                    "2a03:f80:30:192:71:166:92:1": {},
+                    "151.216.64.55": {},
+                    "151.216.64.55": {},
+                    "2a0e:c5c1:0:10::7": {},
+                    "2a0e:c5c1:0:10::8": {},
                 }
             }
         },
@@ -52,6 +55,13 @@ CUMULUS_CONFIG = {
                 "all-v6": {},
             },
             "readonly-community": {},
+        },
+        "syslog": {
+            "default": {
+                "server": {
+                    "logging.noc.gulas.ch": {},
+                },
+            },
         },
     },
     "router": {
