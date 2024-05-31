@@ -56,6 +56,13 @@ CUMULUS_CONFIG = {
             },
             "readonly-community": {},
         },
+        "syslog": {
+            "default": {
+                "server": {
+                    "logging.noc.gulas.ch": {},
+                },
+            },
+        },
     },
     "router": {
         "bgp": {
