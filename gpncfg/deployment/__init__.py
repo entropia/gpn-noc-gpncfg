@@ -642,5 +642,7 @@ DRIVERS = {
     "access-switch_juniper_ex2300c-12p": DeployJunos,
     "access-switch_juniper_ex3300-24t": DeployJunos,
     "access-switch_juniper_ex3300-48p": DeployJunos,
+    "access-switch_juniper_ex3300-48t": DeployJunos,
     "core-switch_mellanox_sn2410": DeployCumuls,
+    "core-switch_mellanox_sn3420": DeployCumuls,
 }

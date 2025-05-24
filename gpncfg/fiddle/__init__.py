@@ -158,7 +158,10 @@ class Fiddler:
 
                         device["physical_interfaces"].append(iface)
 
-            elif usecase == "core-switch_mellanox_sn2410":
+            elif usecase in [
+                "core-switch_mellanox_sn2410",
+                "core-switch_mellanox_sn3420",
+            ]:
                 config = copy.deepcopy(CUMULUS_CONFIG)
 
                 config["system"]["hostname"] = device["nodename"]
