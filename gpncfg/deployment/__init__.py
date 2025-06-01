@@ -461,6 +461,13 @@ class DeployCumulus(DeployDriver):
             ),
         )
 
+    def delete_revision(self, base, session, rev, name):
+        self.honor_exit()
+        self.log.info(f"deleting revision {rev} on node {name}")
+        session.delete(
+            f"{base}/revision/{rev}",
+        )
+
     def save_to_startup(self, base, session, rev):
         self.honor_exit()
         self.log.debug(f"saving revision {rev} to startup config")
@@ -546,6 +553,7 @@ class DeployCumulus(DeployDriver):
                     self.log.debug(
                         "not activating revision which only changes the pre-login message"
                     )
+                    self.delete_revision(base, session, rev, device["nodename"])
                     return True
                 else:
                     self.log.debug(
