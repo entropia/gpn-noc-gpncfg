@@ -115,7 +115,7 @@ snmp {
     location "{{ device["location"]["name"] }}"
     filter-interfaces {
         interfaces {
-            "!^(((xe|ge|et)-[0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]?|ae[0-9][0-9]?)\.?[0-9]*|irb\.[0-9]+)$"
+            "!^(((xe|ge|et)-[0-9][0-9]?\/[0-9][0-9]?\/[0-9][0-9]?|(ae|me)[0-9][0-9]?|vlan)\.?[0-9]*|irb\.[0-9]+)$"
         }
     }
     community "{{ config["snmp_community"] }}" {
