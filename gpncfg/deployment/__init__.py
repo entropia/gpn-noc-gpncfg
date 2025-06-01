@@ -356,7 +356,7 @@ class DeployJunos(DeployDriver):
         self.log.info("config fully deployed")
 
 
-class DeployCumuls(DeployDriver):
+class DeployCumulus(DeployDriver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.timeout = int(self.cfg.rollback_timeout) * 60
@@ -649,6 +649,6 @@ DRIVERS = {
     "access-switch_juniper_ex3300-24t": DeployJunos,
     "access-switch_juniper_ex3300-48p": DeployJunos,
     "access-switch_juniper_ex3300-48t": DeployJunos,
-    "core-switch_mellanox_sn2410": DeployCumuls,
-    "core-switch_mellanox_sn3420": DeployCumuls,
+    "core-switch_mellanox_sn2410": DeployCumulus,
+    "core-switch_mellanox_sn3420": DeployCumulus,
 }
