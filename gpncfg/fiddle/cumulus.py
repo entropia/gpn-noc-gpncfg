@@ -33,10 +33,10 @@ CUMULUS_CONFIG = {
                 },
                 "server": {
                     "151.216.64.55": {},
-                    "151.216.64.55": {},
+                    "151.216.64.56": {},
                     "2a0e:c5c1:0:10::7": {},
                     "2a0e:c5c1:0:10::8": {},
-                }
+                },
             }
         },
         "dhcp-server": {
@@ -76,12 +76,21 @@ CUMULUS_CONFIG = {
                         "10": {
                             "action": "permit",
                             "match": {
-                                "151.216.64.0/19": {
+                                "151.218.0.0/18": {
                                     "max-prefix-len": 32,
-                                    "min-prefix-len": 20,
+                                    "min-prefix-len": 19,
                                 }
                             },
-                        }
+                        },
+                        "20": {
+                            "action": "permit",
+                            "match": {
+                                "45.140.180.0/24": {
+                                    "max-prefix-len": 32,
+                                    "min-prefix-len": 25,
+                                }
+                            },
+                        },
                     },
                 },
                 "EVENTNET6": {
