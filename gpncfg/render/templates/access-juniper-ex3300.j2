@@ -78,13 +78,17 @@ interfaces {
                 vlan {
                     members {{ iface["tagged_vlans_text"] }};
                 }
+                {% if iface["untagged_vlan"] %}
                 native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
+                {% endif %}
             {% elif iface["mode"] == "TAGGED_ALL" %}
                 port-mode trunk;
                 vlan {
                     members all;
                 }
+                {% if iface["untagged_vlan"] %}
                 native-vlan-id {{ iface["untagged_vlan"]["vid"] }};
+                {% endif %}
             {% endif %}
             }
         }
