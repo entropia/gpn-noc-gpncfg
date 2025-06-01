@@ -27,6 +27,13 @@ CUMULUS_CONFIG = {
             },
         },
         "reboot": {"mode": "cold"},
+        "security": {
+            "encryption": {
+                "db": {
+                    "state": "disabled",
+                },
+            },
+        },
         "ssh-server": {},
         "snmp-server": {
             "state": "enabled",
