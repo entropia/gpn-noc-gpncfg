@@ -71,6 +71,7 @@ CUMULUS_CONFIG = {
         },
         "dhcp-relay": {
             "default": {
+                "source-ip": "giaddress",
                 "server": {
                     "45.140.180.227": {},
                     "45.140.180.228": {},
