@@ -5,9 +5,12 @@ CUMULUS_CONFIG = {
     "interface": {},
     "system": {
         "aaa": {"user": {}},
-        "api": {"certificate": "web"},
+        "api": {
+            "state": "enabled",
+            "certificate": "web",
+        },
         "config": {
-            "auto-save": {"enable": "on"},
+            "auto-save": {"state": "enabled"},
             "snippet": {
                 "neighmgr": {
                     "content": "[main]\nsetsrcipv4: 100.64.0.1\n",
@@ -15,11 +18,38 @@ CUMULUS_CONFIG = {
                     "services": {
                         "neighmgr": {"action": "restart", "service": "neighmgrd"}
                     },
-                }
+                },
+                "sudoers": {
+                    "content": "%sudo ALL=(ALL:ALL) NOPASSWD: ALL",
+                    "file": "/etc/sudoers.d/nopasswd",
+                    "permissions": "0440",
+                },
             },
         },
         "reboot": {"mode": "cold"},
+        "security": {
+            "encryption": {
+                "db": {
+                    "state": "disabled",
+                },
+            },
+        },
         "ssh-server": {},
+        "snmp-server": {
+            "state": "enabled",
+            "listening-address": {
+                "all": {},
+                "all-v6": {},
+            },
+        },
+        "ssh-server": {
+            "state": "enabled",
+        },
+        "syslog": {
+            "server": {
+                "logging.noc.gulas.ch": {},
+            },
+        },
         "wjh": {
             "channel": {"forwarding": {"trigger": {"l2": {}, "l3": {}, "tunnel": {}}}},
             "enable": "on",
@@ -39,27 +69,23 @@ CUMULUS_CONFIG = {
                 },
             }
         },
-        "dhcp-server": {
+        "dhcp-relay": {
             "default": {
-                "domain-name-server": {
-                    "151.216.64.55": {},
-                    "151.216.64.56": {},
+                "source-ip": "giaddress",
+                "server": {
+                    "45.140.180.227": {},
+                    "45.140.180.228": {},
                 },
-                "pool": {},
+                "interface": {},
             },
         },
-        "snmp-server": {
-            "enable": "on",
-            "listening-address": {
-                "all": {},
-                "all-v6": {},
-            },
-            "readonly-community": {},
-        },
-        "syslog": {
+        "ntp": {
             "default": {
                 "server": {
-                    "logging.noc.gulas.ch": {},
+                    "0.cumulusnetworks.pool.ntp.org": {},
+                    "1.cumulusnetworks.pool.ntp.org": {},
+                    "2.cumulusnetworks.pool.ntp.org": {},
+                    "3.cumulusnetworks.pool.ntp.org": {},
                 },
             },
         },
@@ -132,7 +158,6 @@ CUMULUS_CONFIG = {
     },
     "vrf": {
         "default": {
-            "loopback": {"ip": {"address": {}}},
             "router": {
                 "bgp": {
                     "address-family": {

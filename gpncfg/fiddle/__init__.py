@@ -171,17 +171,17 @@ class Fiddler:
 
                 config["system"]["hostname"] = device["nodename"]
                 config["system"]["message"] = {"pre-login": device["motd"]}
-                config["service"]["snmp-server"]["readonly-community"] = {
-                    self.cfg.snmp_community: {"access": {"any": {}}}
-                }
+                osnmp = {self.cfg.snmp_community: {"access": {"any": {}}}}
+                config["system"]["snmp-server"]["readonly-community"] = osnmp
+                config["system"]["snmp-server"]["readonly-community-v6"] = osnmp
 
                 if device["nodename"] == "cumulus-test":
                     config["system"]["ssh-server"]["strict"] = "disabled"
 
                 ifaces = dict()
                 oneigh = dict()
-                loips = dict()
                 vlans = set()
+                dhcp_relay_count = 0
                 for iif in device["interfaces"]:
                     oif = {}
                     vlancfg = dict()
@@ -239,7 +239,6 @@ class Fiddler:
 
                     if iif["name"] == "lo":
                         for addr in iif["ip_addresses"]:
-                            loips[addr["address"]] = dict()
                             if addr["ip_version"] == 4:
                                 config["router"]["bgp"]["router-id"] = addr["host"]
                         oif["type"] = "loopback"
@@ -255,25 +254,11 @@ class Fiddler:
                                     "2a0e:c5c1:0:10::8": {},
                                 },
                             }
-                        elif tag["name"] == "dhcp server":
-                            for addr in iif["ip_addresses"]:
-                                if addr["ip_version"] != 4:
-                                    continue
-                                ip = ipaddress.IPv4Network(
-                                    addr["address"], strict=False
-                                )
-                                hosts = list(ip.hosts())
-                                config["service"]["dhcp-server"]["default"]["pool"][
-                                    ip.compressed
-                                ] = {
-                                    "pool-name": iif["untagged_vlan"]["name"],
-                                    "gateway": {addr["host"]: {}},
-                                    "range": {
-                                        hosts[1].compressed: {
-                                            "to": hosts[-1].compressed
-                                        }
-                                    },
-                                }
+                        elif tag["name"] == "dhcp relay":
+                            dhcp_relay_count += 1
+                            config["service"]["dhcp-relay"]["default"]["interface"][
+                                iif["name"]
+                            ] = {}
 
                     ifaces[slugify(iif["name"])] = oif
 
@@ -295,6 +280,9 @@ class Fiddler:
                     stp_priority * 4096
                 )
 
+                if dhcp_relay_count == 0:
+                    config["service"].pop("dhcp-relay")
+
                 ousers = dict()
 
                 for user in self.cfg.login.user:
@@ -313,7 +301,14 @@ class Fiddler:
                     }
                     if user["password"]:
                         ousercfg["hashed-password"] = user["password"]
+                    else:
+                        ousercfg["hashed-password"] = self.cfg.login.root.sha512
                     ousers[user["name"]] = ousercfg
+
+                ousers["cumulus"] = {
+                    "role": "system-admin",
+                    "hashed-password": self.cfg.login.root.sha512,
+                }
 
                 for routing in device["bgp_routing_instances"]:
                     config["router"]["bgp"]["autonomous-system"] = routing[
@@ -337,8 +332,6 @@ class Fiddler:
                             **device
                         )
                     )
-
-                config["vrf"]["default"]["loopback"]["ip"]["address"] = loips
 
                 ostatic = dict()
 
