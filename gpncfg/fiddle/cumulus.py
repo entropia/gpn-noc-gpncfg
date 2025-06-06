@@ -47,7 +47,7 @@ CUMULUS_CONFIG = {
         },
         "syslog": {
             "server": {
-                "logging.noc.gulas.ch": {},
+                "librenms.noc.gulas.ch": {},
             },
         },
         "wjh": {
@@ -62,8 +62,8 @@ CUMULUS_CONFIG = {
                     "noc.gulas.ch": {},
                 },
                 "server": {
-                    "151.216.64.55": {},
-                    "151.216.64.56": {},
+                    "151.218.1.53": {},
+                    "151.218.1.54": {},
                     "2a0e:c5c1:0:10::7": {},
                     "2a0e:c5c1:0:10::8": {},
                 },
@@ -73,8 +73,8 @@ CUMULUS_CONFIG = {
             "default": {
                 "source-ip": "giaddress",
                 "server": {
-                    "45.140.180.227": {},
-                    "45.140.180.228": {},
+                    "151.218.1.3": {},
+                    "151.218.1.4": {},
                 },
                 "interface": {},
             },
