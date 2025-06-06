@@ -47,7 +47,7 @@ CUMULUS_CONFIG = {
         },
         "syslog": {
             "server": {
-                "librenms.noc.gulas.ch": {},
+                "logging.noc.gulas.ch": {},
             },
         },
         "wjh": {
