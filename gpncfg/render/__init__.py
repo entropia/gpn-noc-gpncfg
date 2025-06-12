@@ -88,7 +88,7 @@ class Renderer:
                 try:
                     template = self.j2.get_template(template_name)
                     cwc.set_config(template.render(cwc.context))
-                except jinja2.TemplateNotFound as e:
+                except jinja2.TemplateNotFound:
                     raise Exception(
                         "failed to find jinja2 template {} for usecase {} for device {serial} {nodename}".format(
                             template_name, usecase, **device
