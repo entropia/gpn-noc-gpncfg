@@ -89,7 +89,7 @@ class Fiddler:
                 device["gateway"] = device["primary_ip4"]["parent"]["rel_gateway"][
                     "host"
                 ]
-            except TypeError as e:
+            except TypeError:
                 if device["role"]["name"] == "access":
                     log.warning(
                         "access device has no gateway {nodename} {serial})".format(
