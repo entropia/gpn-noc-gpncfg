@@ -44,7 +44,7 @@ class Fiddler:
     def fiddle(self, data):
         log.info("fiddling data")
         ts = (
-            datetime.datetime.utcnow()
+            datetime.datetime.now(datetime.timezone.utc)
             .replace(microsecond=0, tzinfo=datetime.timezone.utc)
             .isoformat()
         )
