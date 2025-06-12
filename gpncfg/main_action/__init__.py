@@ -232,13 +232,13 @@ class MainAction:
             log.debug("preparing to handle an exception in main thread", exc_info=e)
             try:
                 # log why the main thread was interrupted
-                if isinstance(e, Exception):
+                if isinstance(e, KeyboardInterrupt):
+                    log.info("received ^C, attempting clean shutdown.")
+                else:
                     log.fatal(
                         "main thread encountered error",
                         exc_info=e,
                     )
-                else:
-                    log.info("received ^C, attempting clean shutdown.")
 
                 log.debug("telling worker threads to stop")
                 # no new threads/futures can spawn
