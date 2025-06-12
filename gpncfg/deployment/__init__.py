@@ -356,7 +356,7 @@ class DeployJunos(DeployDriver):
         self.log.info("config fully deployed")
 
 
-class DeployCumuls(DeployDriver):
+class DeployCumulus(DeployDriver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.timeout = int(self.cfg.rollback_timeout) * 60
@@ -461,6 +461,13 @@ class DeployCumuls(DeployDriver):
             ),
         )
 
+    def delete_revision(self, base, session, rev, name):
+        self.honor_exit()
+        self.log.info(f"deleting revision {rev} on node {name}")
+        session.delete(
+            f"{base}/revision/{rev}",
+        )
+
     def save_to_startup(self, base, session, rev):
         self.honor_exit()
         self.log.debug(f"saving revision {rev} to startup config")
@@ -546,6 +553,7 @@ class DeployCumuls(DeployDriver):
                     self.log.debug(
                         "not activating revision which only changes the pre-login message"
                     )
+                    self.delete_revision(base, session, rev, device["nodename"])
                     return True
                 else:
                     self.log.debug(
@@ -649,6 +657,6 @@ DRIVERS = {
     "access-switch_juniper_ex3300-24t": DeployJunos,
     "access-switch_juniper_ex3300-48p": DeployJunos,
     "access-switch_juniper_ex3300-48t": DeployJunos,
-    "core-switch_mellanox_sn2410": DeployCumuls,
-    "core-switch_mellanox_sn3420": DeployCumuls,
+    "core-switch_mellanox_sn2410": DeployCumulus,
+    "core-switch_mellanox_sn3420": DeployCumulus,
 }
