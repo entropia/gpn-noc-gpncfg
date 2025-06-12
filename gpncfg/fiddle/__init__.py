@@ -31,6 +31,12 @@ def slugify(text):
     return dup_free_text
 
 
+def sanitize_vlans(data):
+    for vlan in data["vlans"]:
+        vlan["name"] = slugify(vlan["name"])
+    return data
+
+
 class Fiddler:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -42,13 +48,8 @@ class Fiddler:
             .replace(microsecond=0, tzinfo=datetime.timezone.utc)
             .isoformat()
         )
-        data = self.sanetize_vlans(data)
+        data = sanitize_vlans(data)
         data = self.fiddle_devices(data, ts)
-        return data
-
-    def sanetize_vlans(self, data):
-        for vlan in data["vlans"]:
-            vlan["name"] = slugify(vlan["name"])
         return data
 
     def fiddle_devices(self, data, ts):
