@@ -110,6 +110,7 @@ class DataProvider:
                         tagged_vlans{name,vid},
                         untagged_vlan{name,vid},
                         _custom_field_data,
+                        vrf { name },
                     }
                     bgp_routing_instances {
                       autonomous_system {
