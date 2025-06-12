@@ -141,7 +141,7 @@ class Fiddler:
                         )
 
                         if (
-                            device["device_type"]["model"] == "EX2300C-12P"
+                            device["device_type"]["model"].startswith("EX2300C")
                             and iface["untagged_vlan"]
                         ):
                             tagged.append(slugify(iface["untagged_vlan"]["name"]))

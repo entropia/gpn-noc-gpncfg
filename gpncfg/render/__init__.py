@@ -9,8 +9,11 @@ import jinja2
 log = logging.getLogger(__name__)
 
 TEMPLATE_MAP = {
+    "access-switch_juniper_ex2200c-12p": "access-juniper-ex3300.j2",
     "access-switch_juniper_ex2200c-12t": "access-juniper-ex3300.j2",
     "access-switch_juniper_ex2300c-12p": "access-juniper-ex2_00c.j2",
+    "access-switch_juniper_ex2300c-12t": "access-juniper-ex2_00c.j2",
+    "access-switch_juniper_ex3300-24p": "access-juniper-ex3300.j2",
     "access-switch_juniper_ex3300-24t": "access-juniper-ex3300.j2",
     "access-switch_juniper_ex3300-48p": "access-juniper-ex3300.j2",
     "access-switch_juniper_ex3300-48t": "access-juniper-ex3300.j2",

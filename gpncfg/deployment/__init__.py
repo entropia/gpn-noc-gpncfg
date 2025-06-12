@@ -641,8 +641,11 @@ class DeployCumuls(DeployDriver):
 
 
 DRIVERS = {
+    "access-switch_juniper_ex2200c-12p": DeployJunos,
     "access-switch_juniper_ex2200c-12t": DeployJunos,
     "access-switch_juniper_ex2300c-12p": DeployJunos,
+    "access-switch_juniper_ex2300c-12t": DeployJunos,
+    "access-switch_juniper_ex3300-24p": DeployJunos,
     "access-switch_juniper_ex3300-24t": DeployJunos,
     "access-switch_juniper_ex3300-48p": DeployJunos,
     "access-switch_juniper_ex3300-48t": DeployJunos,
