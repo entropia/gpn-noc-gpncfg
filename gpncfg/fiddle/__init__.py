@@ -213,7 +213,9 @@ class Fiddler:
                     if iaddrs := iif["ip_addresses"]:
                         oif["ip"] = {"address": {}}
 
-                        if iif["name"].startswith("eth"):
+                        if iif["vrf"]:
+                            oif["ip"]["vrf"] = iif["vrf"]["name"]
+                        elif iif["name"].startswith("eth"):
                             oif["ip"]["vrf"] = "mgmt"
 
                         if iif["_custom_field_data"].get("dhcp_client", False):
@@ -235,6 +237,8 @@ class Fiddler:
                                         oif["ip"]["gateway"] = {ver[0]: {}}
 
                             oif["ip"]["address"] = oaddrs
+                    elif iif["vrf"]:
+                        oif["ip"] = {"vrf": iif["vrf"]["name"]}
                     elif iif["name"].startswith("eth"):
                         oif["ip"] = {"vrf": "mgmt"}
 
