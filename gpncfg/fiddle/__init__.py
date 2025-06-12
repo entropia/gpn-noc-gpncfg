@@ -5,18 +5,30 @@ import datetime
 import ipaddress
 import json
 import logging
+import re
 
 from .cumulus import CUMULUS_CONFIG, UNNUMBERED_BGP
 
 log = logging.getLogger(__name__)
 
 
-TRANS_SLUG = str.maketrans(" ", "-", "()")
-TRANS_SLUG.update(str.maketrans({"ß": "ss"}))
+TRANS_SLUG = str.maketrans({"ß": "ss", "ö": "oe", "ä": "ae", "ü": "ue"})
 
 
 def slugify(text):
-    return text.lower().translate(TRANS_SLUG)
+    """
+    Juniper requires VLAN names to be at least two characters long, starting with a letter.
+    Allowed characters are letters, numbers, dashes, and underscores.
+    """
+    lower_text = text.lower()
+    umlaut_free_text = lower_text.translate(TRANS_SLUG)
+    clean_text = re.sub("[^0-9a-zA-Z_-]+", "_", umlaut_free_text)
+    dup_free_text = re.sub("_+", "_", clean_text)
+    if not re.match("^[a-z]", dup_free_text):
+        dup_free_text = "z" + dup_free_text
+    if len(dup_free_text) < 2:
+        dup_free_text = "x" + dup_free_text
+    return dup_free_text
 
 
 class Fiddler:
