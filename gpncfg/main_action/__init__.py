@@ -84,7 +84,7 @@ class MainAction:
             dp.fetch_nautobot()
 
         if self.cfg.populate_cache:
-            return
+            return None
 
         data = self.fiddler.fiddle(dp.data)
         return self.renderer.render(data)
