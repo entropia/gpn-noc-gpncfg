@@ -201,7 +201,7 @@ class DataProvider:
             log.debug("cache is up to date")
         else:
             name = "nautobot-{}.json".format(
-                datetime.datetime.utcnow()
+                datetime.datetime.now(datetime.timezone.utc)
                 .replace(microsecond=0, tzinfo=datetime.timezone.utc)
                 .isoformat()
             )
