@@ -277,5 +277,5 @@ class MainAction:
                     if fut.running():
                         log.info(f"remaining device worker {fut} with id {fut.id}")
                     else:
-                        log.debug(f"remaining device worker {fut} with id {fut.id}")
+                        log.debug(f"exited worker {fut} with id {fut.id}")
                 os._exit(1)
