@@ -4,6 +4,7 @@ import logging
 import os
 import queue
 import shutil
+import sys
 import threading
 import time
 from concurrent import futures
@@ -239,14 +240,14 @@ class MainAction:
                 else:
                     log.info("received ^C, attempting clean shutdown.")
 
-                # tell worker threads to exit
-                log.debug("waiting for 6 minutes for workers to exit")
-                pool.shutdown(wait=360, cancel_futures=True)
-                log.debug("thread pool was sucessfully shut down")
+                log.debug("telling worker threads to stop")
+                # no new threads/futures can spawn
+                pool.shutdown(wait=False, cancel_futures=True)
+                # indicate to workers that they must exit
                 self.exit.set()
 
                 log.info(
-                    "waiting for worker threads to exit. this might take up to a minute"
+                    "waiting for worker threads to exit. this might take a while"
                 )
 
                 # wait for workers to finish and log their result
@@ -262,7 +263,7 @@ class MainAction:
 
                 # exit with non zero code if the main loop got interrupted by an error
                 if isinstance(e, Exception):
-                    exit(1)
+                    sys.exit(1)
             except (Exception, KeyboardInterrupt) as e:
                 log.fatal(
                     "main thread encountered error while trying to exit, force exiting now",
