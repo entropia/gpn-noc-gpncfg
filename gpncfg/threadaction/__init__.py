@@ -12,9 +12,10 @@ class ShutdownCommencing(BaseException):
 
 class Action:
     def __init__(self, cfg, exit, name):
-        self.exit = exit
         self.cfg = cfg
+        self.exit = exit
         self.log = logging.getLogger(__name__).getChild(f"action#{name}")
+        self.name = name
 
     def honor_exit(self):
         if self.exit.is_set():
