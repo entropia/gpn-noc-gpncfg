@@ -18,6 +18,7 @@ requests = "^2.32.2"
 requests-toolbelt = "^1.0.0"
 toml = "^0.10.2"
 toml-dataclass = "^0.1.0"
+prometheus-client = "^0.22.1"
 
 
 [tool.poetry.group.dev.dependencies]
