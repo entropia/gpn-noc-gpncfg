@@ -4,6 +4,7 @@ import logging
 import os
 import queue
 import shutil
+import sys
 import threading
 import time
 from concurrent import futures
@@ -39,18 +40,25 @@ def log_worker_result(task):
         log.debug(f"{name} completed with result {task.result(0)}")
 
 
-def log_action_result(task):
-    name = f"action thread {task.id}"
-    if exc := task.exception(0):
-        log.error(f"{name} encountered an error", exc_info=exc)
-    else:
-        log.error(f"{name} finished unexpectedly with result {task.result(0)}")
+def handle_worker_exits(pending, timeout):
+    start = time.time()
+    end = start + timeout
+    log.info(f"waiting {timeout} seconds for worker threads to exit")
+    # handle both lists and sets
+    while end - time.time() > 0:
+        (done, pending) = futures.wait(
+            pending,
+            timeout=end - time.time(),
+            return_when=futures.FIRST_COMPLETED,
+        )
+        for result in done:
+            log_worker_result(result)
 
+        if len(pending) == 0:
+            break
 
-class Alive:
-    def __init__(self, id):
-        self.id = id
-        self.event = threading.Event()
+    if len(pending) > 0:
+        raise TimeoutError("not all worker threads exited in time.")
 
 
 class MainAction:
@@ -97,7 +105,6 @@ class MainAction:
         futs_action = set()
         queues = dict()
         pool = futures.ThreadPoolExecutor(max_workers=999)
-        alives = list()
         try:
             self.writer.spawn(pool, futs_action, queues)
             self.cleaner.spawn(pool, futs_action, queues)
@@ -132,21 +139,12 @@ class MainAction:
 
                     driver = deployment.DRIVERS.get(usecase)
                     if driver:
-                        alive = Alive(id)
                         task = pool.submit(
-                            driver(
-                                self.cfg, self.exit, queues[id], id, alive.event
-                            ).worker_loop,
+                            driver(self.cfg, self.exit, queues[id], id).worker_loop,
                             None,
                         )
                         task.id = id
                         futs_device.add(task)
-                        alives.append(alive)
-                        alive.event.wait(timeout=5)
-                        if not alive.event.is_set():
-                            raise Exception(
-                                f"wtf why did the worker not start within 5 seconds: {id}, we know about {len(futs_device)} + action threads"
-                            )
                     else:
                         missing_usecases.add(usecase)
 
@@ -180,7 +178,7 @@ class MainAction:
                 log.debug("main thread queries finished action workers")
                 done_action, futs_action = futures.wait(futs_action, timeout=0)
                 for fut in done_action:
-                    log_action_result(fut)
+                    log_worker_result(fut)
                     del queues[fut.id]
                 if self.cfg.daemon and done_action:
                     ids = []
@@ -197,10 +195,6 @@ class MainAction:
 
                 log.debug(f"main thread knows about these device workers: {ids}")
 
-                for alive in alives:
-                    if not alive.event.is_set():
-                        log.warning(f"alive event for worker {alive.id} not set yet")
-
                 # only loop in daemon mode
                 if not self.cfg.daemon:
                     break
@@ -210,59 +204,56 @@ class MainAction:
                 if self.cfg.use_cache:
                     time.sleep(10)
 
+            ## this is only executed when we are not doing continuous generation/deployments
             log.info(
                 "deployments are commencing. this ritual may take multiple minutes."
             )
             pool.shutdown(wait=False, cancel_futures=False)
-            # wait for workers to finish and log their result
+
+            # wait 10 minutes for worker threads to exit and log their results
             futs = futs_device
             futs.update(futs_action)
-            start = time.time()
-            for fut in futures.as_completed(futs, timeout=300):
-                log_worker_result(fut)
-                if time.time() - start > 360:
-                    raise TimeoutError("worker thread took too long to complete")
+            handle_worker_exits(futs, 600)
 
             try:
                 shutil.rmtree("/var/tmp/gpncfg")
             except FileNotFoundError:
                 pass
+
+            log.info("goodbye")
+
         except (Exception, KeyboardInterrupt) as e:
-            log.debug("preparing to handle an exception in main thread", exc_info=e)
             try:
                 # log why the main thread was interrupted
-                if isinstance(e, Exception):
+                if isinstance(e, KeyboardInterrupt):
+                    log.info("received ^C, attempting clean shutdown.")
+                else:
                     log.fatal(
                         "main thread encountered error",
                         exc_info=e,
                     )
-                else:
-                    log.info("received ^C, attempting clean shutdown.")
 
-                # tell worker threads to exit
-                log.debug("waiting for 6 minutes for workers to exit")
-                pool.shutdown(wait=360, cancel_futures=True)
-                log.debug("thread pool was sucessfully shut down")
-                self.exit.set()
-
-                log.info(
-                    "waiting for worker threads to exit. this might take up to a minute"
-                )
-
-                # wait for workers to finish and log their result
                 futs = futs_device
                 futs.update(futs_action)
-                start = time.time()
-                for fut in futures.as_completed(futs, timeout=300):
-                    log_worker_result(fut)
-                    if time.time() - start > 360:
-                        raise TimeoutError("worker thread took too long to complete")
+
+                for fut in futs:
+                    if fut.running():
+                        log.debug(f"remaining worker {fut} with id {fut.id}")
+
+                log.debug("telling worker threads to stop")
+                # no new threads/futures can spawn
+                pool.shutdown(wait=False, cancel_futures=True)
+                # indicate to workers that they must exit
+                self.exit.set()
+
+                # wait for workers to finish and log their result
+                handle_worker_exits(futs, 360)
 
                 log.info("all workers exited. gpncfg knows it will join them soon")
 
                 # exit with non zero code if the main loop got interrupted by an error
                 if isinstance(e, Exception):
-                    exit(1)
+                    sys.exit(1)
             except (Exception, KeyboardInterrupt) as e:
                 log.fatal(
                     "main thread encountered error while trying to exit, force exiting now",
@@ -274,7 +265,9 @@ class MainAction:
                     log.debug("futs is empty")
                 for fut in futs:
                     if fut.running():
-                        log.info(f"remaining device worker {fut} with id {fut.id}")
+                        log.info(f"remaining worker {fut} with id {fut.id}")
                     else:
-                        log.debug(f"remaining device worker {fut} with id {fut.id}")
+                        log.debug(f"exited worker {fut} with id {fut.id}")
+
+                log.info("forcing exit, goodbye")
                 os._exit(1)
