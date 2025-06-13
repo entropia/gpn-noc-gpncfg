@@ -54,6 +54,9 @@ def handle_worker_exits(pending, timeout):
         for result in done:
             log_worker_result(result)
 
+        if len(pending) == 0:
+            break
+
     if len(pending) > 0:
         raise TimeoutError("not all worker threads exited in time.")
 
