@@ -203,6 +203,11 @@ class ConfigProvider:
             help="only populate the cache, do not generate any configs",
         )
         parser.add_argument(
+            "--prometheus-port",
+            default=9753,
+            help="port to use for prometheus metrics endpoint, only used in daemon mode",
+        )
+        parser.add_argument(
             "--rollback-timeout",
             help="number of minutes devices should wait for confirmation before rolling back their config",
             required=True,
