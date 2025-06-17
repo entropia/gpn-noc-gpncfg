@@ -135,15 +135,12 @@ class FailedStateError(Exception):
 
 
 class DeployDriver(Action):
-    def __init__(self, cfg, exit, queue, id, alive):
-        log.debug(
-            "deploy driver started with args {}".format([self, exit, queue, id, alive])
-        )
+    def __init__(self, cfg, exit, queue, id):
+        log.debug("deploy driver started with args {}".format([self, exit, queue, id]))
         super().__init__(cfg, exit, f"worker#{id}")
         self.queue = queue
         self.id = id
         self.usecase = None
-        self.alive = alive
 
     def assert_prop(self, device, name):
         old = self.__getattribute__(name)
@@ -160,8 +157,6 @@ class DeployDriver(Action):
 
     def worker_loop(self, _):
         self.log.debug("hello world")
-        self.alive.set()
-        self.log.debug("alive set")
         try:
             self.worker_loop_actual()
         except Exception as e:
