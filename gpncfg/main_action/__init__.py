@@ -16,6 +16,7 @@ from ..config import ConfigProvider
 from ..data_provider import DataProvider
 from ..fiddle import Fiddler
 from ..render import Renderer
+from ..statistics import Statistics
 from ..writer import Cleaner, Writer
 
 log = logging.getLogger(__name__)
@@ -98,6 +99,10 @@ class MainAction:
         return self.renderer.render(data)
 
     def run(self):
+        if self.cfg.daemon:
+            statistics = Statistics()
+            statistics.start_http_server(int(self.cfg.prometheus_port))
+
         if self.cfg.populate_cache:
             return self.fetch_data()
 
