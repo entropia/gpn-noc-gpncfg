@@ -13,7 +13,7 @@ class StatisticsType(Enum):
     ANSWER = 2
     UPDATE = 3
     COMMIT = 4
-    CONFIG = 5
+    CONFIRM = 5
 
 
 class Statistics(object):
