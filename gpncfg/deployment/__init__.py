@@ -10,6 +10,7 @@ import netmiko
 import requests
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
+from ..statistics import Statistics, StatisticsType
 from ..threadaction import Action, ShutdownCommencing
 
 log = logging.getLogger(__name__)
@@ -275,6 +276,8 @@ class DeployJunos(DeployDriver):
         with open(tmp, "w+") as file:
             print(cwc.config, file=file)
 
+        sts = Statistics()
+        sts.update(device["nodename"], StatisticsType.CONTACT)
         netcon = self.connect_junos(device)
         if not netcon:
             self.log.error(
@@ -285,6 +288,7 @@ class DeployJunos(DeployDriver):
             return False
 
         self.log.debug("connected, now uploading config")
+        sts.update(device["nodename"], StatisticsType.ANSWER)
         if not self.cfg.dry_deploy:
             self.honor_exit()
             netmiko.file_transfer(
@@ -306,6 +310,7 @@ class DeployJunos(DeployDriver):
             self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload-new-uid.cfg")
 
         if self.is_change_more_than_motd(netcon):
+            sts.update(device, StatisticsType.UPDATE)
             self.log.debug(
                 "pursuing change that affects more than the motd on {nodename}".format(
                     **device
@@ -323,6 +328,7 @@ class DeployJunos(DeployDriver):
 
         if not self.cfg.dry_deploy:
             try:
+                sts.update(device["nodename"], StatisticsType.COMMIT)
                 self.netcon_cmd(
                     netcon,
                     "commit confirmed {}".format(self.cfg.rollback_timeout),
@@ -344,6 +350,7 @@ class DeployJunos(DeployDriver):
         self.log.debug("device is still reachable, committing configuration")
         self.netcon_cfg_mode(netcon)
         if not self.cfg.dry_deploy:
+            sts.update(device["nodename"], StatisticsType.CONFIRM)
             self.netcon_cmd(netcon, "commit", read_timeout=120)
 
         self.log.debug("all done, disconnecting")
