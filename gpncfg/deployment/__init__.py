@@ -310,7 +310,7 @@ class DeployJunos(DeployDriver):
             self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload-new-uid.cfg")
 
         if self.is_change_more_than_motd(netcon):
-            sts.update(device, StatisticsType.UPDATE)
+            sts.update(device["nodename"], StatisticsType.UPDATE)
             self.log.debug(
                 "pursuing change that affects more than the motd on {nodename}".format(
                     **device
