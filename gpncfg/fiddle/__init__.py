@@ -22,7 +22,9 @@ def slugify(text):
     """
     lower_text = text.lower()
     umlaut_free_text = lower_text.translate(TRANS_SLUG)
-    clean_text = re.sub("[^0-9a-zA-Z_-]+", "_", umlaut_free_text)
+    # we need to map " " to "-" in order to stay compatible with older slugs such as the usecase ones
+    compat_text = re.sub(r"\s", "-", umlaut_free_text)
+    clean_text = re.sub("r[^0-9a-zA-Z_-]+", "_", compat_text)
     dup_free_text = re.sub("_+", "_", clean_text)
     if not re.match("^[a-z]", dup_free_text):
         dup_free_text = "z" + dup_free_text
