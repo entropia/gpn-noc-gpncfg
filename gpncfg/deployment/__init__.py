@@ -514,6 +514,8 @@ class DeployCumulus(DeployDriver):
         device = cwc.device
         self.log.debug("starting deployment")
 
+        sts = Statistics()
+        sts.update(device["nodename"], StatisticsType.CONTACT)
         session = requests.Session()
         session.auth = (self.cfg.deploy_user, self.cfg.nvue_pass)
         session.headers.update(
@@ -536,6 +538,7 @@ class DeployCumulus(DeployDriver):
         res = session.post(f"{base}/revision")
         rev = list(res.json().keys())[0]
         params = {"rev": rev}
+        sts.update(device["nodename"], StatisticsType.ANSWER)
 
         try:
             self.log.debug(f"deploying new revision {rev}")
@@ -544,6 +547,7 @@ class DeployCumulus(DeployDriver):
             session.delete(f"{base}/", params=params)
             self.honor_exit()
             session.patch(f"{base}/", data=json.dumps(device["config"]), params=params)
+            sts.update(device["nodename"], StatisticsType.UPDATE)
 
             diff = self.get_diff(base, session, rev, device["nodename"])
             try:
@@ -574,6 +578,7 @@ class DeployCumulus(DeployDriver):
                 )
             else:
                 self.apply_revision(base, session, rev)
+                sts.update(device["nodename"], StatisticsType.COMMIT)
 
                 self.log.debug("sent commit request, waiting for acknowledgement")
 
@@ -624,6 +629,7 @@ class DeployCumulus(DeployDriver):
                     f"not confirming revision {rev} when running in dry-deploy mode"
                 )
             else:
+                sts.update(device["nodename"], StatisticsType.CONFIRM)
                 self.confirm_revision(base, session, rev, device["nodename"])
 
                 self.wait_for_state(
