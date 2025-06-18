@@ -91,6 +91,9 @@ class MainAction:
             dp.fetch_cache()
         else:
             dp.fetch_nautobot()
+            if self.cfg.daemon:
+                sts = Statistics()
+                sts.set_fetch()
 
         if self.cfg.populate_cache:
             return None
