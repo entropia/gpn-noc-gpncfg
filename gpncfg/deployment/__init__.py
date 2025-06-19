@@ -175,7 +175,7 @@ class DeployDriver(Action):
                     break
                 except (TimeoutError, queue.Empty):
                     pass
-                except (ReadTimeout, netmiko.scp.SCPException):
+                except (ReadTimeout, netmiko.scp.SCPException) as e:
                     self.log.warning("continuing despite this exception", exc_info=e)
                 finally:
                     self.honor_exit()
