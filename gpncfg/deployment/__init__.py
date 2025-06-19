@@ -8,6 +8,7 @@ import time
 
 import netmiko
 import requests
+from netmiko import ReadTimeout
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
 from ..statistics import Statistics, StatisticsType
