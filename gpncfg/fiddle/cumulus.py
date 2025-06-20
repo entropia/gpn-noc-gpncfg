@@ -26,6 +26,20 @@ CUMULUS_CONFIG = {
                 },
             },
         },
+        "control-plane": {
+            "policer": {
+                "arp": {
+                    "burst": 5000,
+                    "rate": 5000,
+                    "state": "on",
+                },
+                "icmp6-neigh": {
+                    "burst": 5000,
+                    "rate": 5000,
+                    "state": "on",
+                },
+            },
+        },
         "reboot": {"mode": "cold"},
         "security": {
             "encryption": {
