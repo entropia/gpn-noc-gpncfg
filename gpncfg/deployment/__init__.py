@@ -308,7 +308,9 @@ class DeployJunos(DeployDriver):
         self.netcon_cfg_mode(netcon)
 
         if not self.cfg.dry_deploy:
-            self.netcon_cmd(netcon, "load override /var/tmp/gpncfg-upload-new-uid.cfg")
+            self.netcon_cmd(
+                netcon, "load override /var/tmp/gpncfg-upload-new-uid.cfg | no-more"
+            )
 
         if self.is_change_more_than_motd(netcon):
             sts.update(device["nodename"], StatisticsType.UPDATE)
