@@ -354,7 +354,7 @@ class DeployJunos(DeployDriver):
         self.netcon_cfg_mode(netcon)
         if not self.cfg.dry_deploy:
             sts.update(device["nodename"], StatisticsType.CONFIRM)
-            self.netcon_cmd(netcon, "commit", read_timeout=120)
+            self.netcon_cmd(netcon, "commit check", read_timeout=120)
 
         self.log.debug("all done, disconnecting")
         netcon.disconnect()
